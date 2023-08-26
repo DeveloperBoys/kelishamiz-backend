@@ -1,4 +1,4 @@
-from . import BASE_DIR, config
+from .base import BASE_DIR, config
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG")

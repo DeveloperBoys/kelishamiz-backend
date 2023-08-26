@@ -1,0 +1,9 @@
+version: '3'
+services:
+  config:
+    build: .
+    command: poetry run python manage.py runserver
+    restart: always
+    container_name: "config"
+    ports:
+      - "8000:8000"

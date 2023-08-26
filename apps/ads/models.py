@@ -10,10 +10,14 @@ class Base(models.Model):
 
 
 class Category(Base):
+    """
+    Category model to represent main categories and subcategories.
+    """
     name = models.CharField(max_length=250)
     parent = models.ForeignKey(
         'self', on_delete=models.CASCADE, null=True, blank=True)
-    icon = models.FileField(null=True, blank=True)
+    icon = models.FileField(
+        upload_to='ads/category/icons/', null=True, blank=True)
 
     class Meta:
         verbose_name = "Category"
@@ -23,14 +27,20 @@ class Category(Base):
         return self.name
 
 
+class DynamicField(models.Model):
+    """
+    DynamicField model for storing custom key-value attributes.
+    """
+    key = models.CharField(max_length=100)
+    value = models.CharField(max_length=255)
+
+
 class Ad(Base):
     """
-    In this Ad model, the main fields of the ad placed by the user are stored.
+    Ad model to store basic advertisement information.
     """
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    name = models.CharField(max_length=150)
-    price = models.DecimalField(max_digits=12, decimal_places=2)
-    description = models.TextField()
+    title = models.CharField(max_length=150)
     is_active = models.BooleanField(default=False)
 
     class Meta:
@@ -38,103 +48,31 @@ class Ad(Base):
         verbose_name_plural = "Ads"
 
 
-class CategorySpecificModel(Base):
+class AdDetail(Base):
     """
-    All models that inherit from this model are created for additional fields of the ad that the user must place.
+    AdDetail model to store detailed information about advertisements.
     """
-
     ad = models.OneToOneField(
-        Ad, on_delete=models.CASCADE, primary_key=True)
+        Ad, related_name='addetail', on_delete=models.CASCADE)
+    currency_type = models.CharField(
+        max_length=3, choices=(("usd", "USD"), ("uzs", "UZS")))
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    description = models.TextField()
+    dynamicFields = models.ManyToManyField(DynamicField, blank=True)
 
     class Meta:
-        abstract = True
+        verbose_name = "Ad Detail"
+        verbose_name_plural = "Ad Details"
 
 
-class TransportCategory(CategorySpecificModel):
+class AdImage(Base):
     """
-    Transportation Model
+    AdImage model to associate images with advertisements.
     """
+    ad = models.ForeignKey(Ad, related_name='adimage_set',
+                           on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='ads/ad/images/')
 
     class Meta:
-        verbose_name = "Transportation Category"
-        verbose_name_plural = "Transportation Categories"
-
-
-class RECategory(CategorySpecificModel):
-    """
-    Real Estate Model
-    """
-
-    class Meta:
-        verbose_name = "Real Estate Category"
-        verbose_name_plural = "Real Estate Categories"
-
-
-class WASCategory(CategorySpecificModel):
-    """
-    Work and Services Model
-    """
-
-    class Meta:
-        verbose_name = "Work and Services Category"
-        verbose_name_plural = "Work and Services Categories"
-
-
-class EATCategory(CategorySpecificModel):
-    """
-    Electronics and Technology Model
-    """
-
-    class Meta:
-        verbose_name = "Electronics and Technology Category"
-        verbose_name_plural = "Electronics and Technology Categories"
-
-
-class HGAFCategory(CategorySpecificModel):
-    """
-    Home, Garden and Furniture Model
-    """
-
-    class Meta:
-        verbose_name = "Home, Garden and Furniture Category"
-        verbose_name_plural = "Home, Garden and Furniture Categories"
-
-
-class CGCategory(CategorySpecificModel):
-    """
-    Construction Goods Model
-    """
-
-    class Meta:
-        verbose_name = "Construction Goods Category"
-        verbose_name_plural = "Construction Goods Categories"
-
-
-class ProductionCategory(CategorySpecificModel):
-    """
-    Production Model
-    """
-
-    class Meta:
-        verbose_name = "Production Category"
-        verbose_name_plural = "Production Categories"
-
-
-class PICategory(CategorySpecificModel):
-    """
-    Personal Items Model
-    """
-
-    class Meta:
-        verbose_name = "Personal Items Category"
-        verbose_name_plural = "Personal Items Categories"
-
-
-class OCategory(CategorySpecificModel):
-    """
-    Others Model
-    """
-
-    class Meta:
-        verbose_name = "Others Category"
-        verbose_name_plural = "Others Categories"
+        verbose_name = "Ad Image"
+        verbose_name_plural = "Ad Images"

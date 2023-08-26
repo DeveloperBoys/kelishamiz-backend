@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "kelishamiz-backend"
+version = "0.1.0"
+description = ""
+authors = ["Murtazo <murtazox04@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+packages = [{include = "kelishamiz_backend"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.2.4"
+djangorestframework = "^3.14.0"
+python-decouple = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

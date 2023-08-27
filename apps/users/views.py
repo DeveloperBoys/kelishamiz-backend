@@ -10,8 +10,8 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from shared.utils import send_email, send_phone_notification
-from .serializers import (ChangeUserInformationSerializer, MyTokenObtainPairSerializer,
+from .utils import send_email, send_phone_notification
+from .serailizers import (ChangeUserInformationSerializer, MyTokenObtainPairSerializer,
                           CustomTokenRefreshSerializer, LogoutSerializer, SignUpSerializer)
 from .models import User, CODE_VERIFIED, DONE, VIA_SOCIAL, VIA_PHONE
 

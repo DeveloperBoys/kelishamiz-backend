@@ -2,20 +2,33 @@ from django.urls import path
 from apps.classifieds import views
 
 urlpatterns = [
+    # DynamicField URLs
     path('dynamic-fields/', views.DynamicFieldListView.as_view(),
-         name='dynamic-field-list'),
+         name='dynamicfield-list'),
     path('dynamic-fields/<int:pk>/',
-         views.DynamicFieldDetailView.as_view(), name='dynamic-field-detail'),
+         views.DynamicFieldDetailView.as_view(), name='dynamicfield-detail'),
+
+    # Category URLs
     path('categories/', views.CategoryListView.as_view(), name='category-list'),
     path('categories/<int:pk>/', views.CategoryDetailView.as_view(),
          name='category-detail'),
-    path('ad-details/', views.AdDetailListView.as_view(), name='ad-detail-list'),
-    path('ad-details/<int:pk>/', views.AdDetailDetailView.as_view(),
-         name='ad-detail-detail'),
-    path('ad-images/', views.AdImageView.as_view(), name='ad-image-list'),
-    path('ad-images/<int:pk>/', views.AdImageDetailView.as_view(),
-         name='ad-image-detail'),
-    path('ads/', views.AdListView.as_view(), name='ad-list'),
-    path('ads/<int:pk>/', views.AdDetailView.as_view(), name='ad-detail'),
-    path('ads/create/', views.AdCreateView.as_view(), name='ad-create')
+
+    # ClassifiedDetail URLs
+    path('classified-details/', views.ClassifiedDetailListView.as_view(),
+         name='classifieddetail-list'),
+    path('classified-details/<int:pk>/',
+         views.ClassifiedDetailDetailView.as_view(), name='classifieddetail-detail'),
+
+    # ClassifiedImage URLs
+    path('classified-images/', views.ClassifiedImageView.as_view(),
+         name='classifiedimage-list'),
+    path('classified-images/<int:pk>/',
+         views.ClassifiedImageDetailView.as_view(), name='classifiedimage-detail'),
+
+    # Classified URLs
+    path('classifieds/', views.ClassifiedListView.as_view(), name='classified-list'),
+    path('classifieds/<int:pk>/', views.ClassifiedDetailView.as_view(),
+         name='classified-detail'),
+    path('classifieds/create/', views.ClassifiedCreateView.as_view(),
+         name='classified-create'),
 ]

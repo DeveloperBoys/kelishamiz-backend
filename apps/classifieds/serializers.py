@@ -42,7 +42,7 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classified
-        fields = ('title', 'imageUrl', 'price', 'createdAt')
+        fields = ('title', 'imageUrl', 'price', 'is_liked', 'createdAt')
 
     def get_price(self, obj):
         classified_detail = ClassifiedDetail.objects.filter(
@@ -65,7 +65,8 @@ class ClassifiedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classified
-        fields = ('title', 'category', 'detail', 'images', 'createdAt')
+        fields = ('title', 'category', 'detail',
+                  'images', 'is_liked' 'createdAt')
 
 
 class ClassifiedCreateSerializer(serializers.ModelSerializer):
@@ -74,7 +75,8 @@ class ClassifiedCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classified
-        fields = ('category', 'title', 'is_active', 'detail', 'images')
+        fields = ('category', 'title', 'is_active',
+                  'detail', 'images', 'is_liked')
 
     def create(self, validated_data):
         detail_data = validated_data.pop('detail')

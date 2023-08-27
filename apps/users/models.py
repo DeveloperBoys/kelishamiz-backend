@@ -119,16 +119,13 @@ class User(AbstractUser, BaseModel):
     )
     auth_status = models.CharField(
         max_length=31, choices=AUTH_STATUS, default=NEW)
-    auth_type = models.CharField(
-        max_length=31, choices=AUTH_TYPE_CHOICES, default=VIA_PHONE)
-    profile_image = models.ImageField(
-        upload_to='users/user/', blank=True, null=True
+    profile_image = models.FileField(
+        upload_to='uploads/user', blank=True, null=True
     )
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(
         max_length=12, unique=True, validators=[_validate_phone])
-    bio = models.TextField(null=True, blank=True)
-
+    birth_date = models.DateField(blank=True, null=True)
     objects = UserManagerWithRandomUsername()
 
     class Meta:

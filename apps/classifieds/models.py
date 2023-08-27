@@ -17,7 +17,7 @@ class Category(Base):
     parent = models.ForeignKey(
         'self', on_delete=models.CASCADE, null=True, blank=True)
     icon = models.FileField(
-        upload_to='ads/category/icons/', null=True, blank=True)
+        upload_to='classifieds/category/icons/', null=True, blank=True)
 
     class Meta:
         verbose_name = "Category"
@@ -35,25 +35,25 @@ class DynamicField(models.Model):
     value = models.CharField(max_length=255)
 
 
-class Ad(Base):
+class Classified(Base):
     """
-    Ad model to store basic advertisement information.
+    Classified model to store basic classifieds information.
     """
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     title = models.CharField(max_length=150)
     is_active = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = "Ad"
-        verbose_name_plural = "Ads"
+        verbose_name = "Classified"
+        verbose_name_plural = "Classifieds"
 
 
-class AdDetail(Base):
+class ClassifiedDetail(Base):
     """
-    AdDetail model to store detailed information about advertisements.
+    ClassifiedDetail model to store detailed information about classifieds.
     """
-    ad = models.OneToOneField(
-        Ad, related_name='addetail', on_delete=models.CASCADE)
+    classified = models.OneToOneField(
+        Classified, related_name='classifieddetail', on_delete=models.CASCADE)
     currency_type = models.CharField(
         max_length=3, choices=(("usd", "USD"), ("uzs", "UZS")))
     price = models.DecimalField(max_digits=12, decimal_places=2)
@@ -61,18 +61,18 @@ class AdDetail(Base):
     dynamicFields = models.ManyToManyField(DynamicField, blank=True)
 
     class Meta:
-        verbose_name = "Ad Detail"
-        verbose_name_plural = "Ad Details"
+        verbose_name = "Classified Detail"
+        verbose_name_plural = "Classified Details"
 
 
-class AdImage(Base):
+class ClassifiedImage(Base):
     """
-    AdImage model to associate images with advertisements.
+    ClassifiedImage model to associate images with classifieds.
     """
-    ad = models.ForeignKey(Ad, related_name='adimage_set',
-                           on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='ads/ad/images/')
+    classified = models.ForeignKey(Classified, related_name='classifiedimage_set',
+                                   on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='classifieds/classified/images/')
 
     class Meta:
-        verbose_name = "Ad Image"
-        verbose_name_plural = "Ad Images"
+        verbose_name = "Classified Image"
+        verbose_name_plural = "Classified Images"

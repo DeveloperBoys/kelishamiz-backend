@@ -22,7 +22,7 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
-    'apps.ads.apps.AdsConfig',
+    'apps.classifieds.apps.ClassifiedsConfig',
     'apps.users.apps.UsersConfig',
 ]
 

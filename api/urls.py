@@ -1,5 +1,5 @@
 from django.urls import path
-from apps.ads import views
+from apps.classifieds import views
 
 urlpatterns = [
     path('dynamic-fields/', views.DynamicFieldListView.as_view(),

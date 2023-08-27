@@ -11,7 +11,7 @@ from django.contrib.auth.models import update_last_login
 from django.contrib.auth.password_validation import validate_password
 
 from .utils import phone_parser, send_email, send_phone_notification
-from config.utilities import check_phone, check_user_type
+from config.utilities import check_phone_or_social, check_user_type
 from .models import User, VIA_PHONE, VIA_GOOGLE, VIA_TELEGRAM, VIA_ICLOUD, NEW, DONE, CODE_VERIFIED
 
 
@@ -129,17 +129,27 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def auth_validate(attrs):
-        user_input = str(attrs.get('phone_number')).lower()
+        user_input = str(attrs.get('phone_number_or_social')).lower()
         print(user_input)
-        input_type = check_phone(user_input)
-        if input_type == "email":
+        input_type = check_phone_or_social(user_input)
+        if input_type == "google":
             data = {
-                "email": attrs.get('email_phone_number'),
-                'auth_type': VIA_EMAIL
+                "email": attrs.get('social_phone_number'),
+                'auth_type': VIA_GOOGLE
             }
-        if input_type == "phone":
+        elif input_type == "telegram":
             data = {
-                "phone_number": attrs.get('phone_number'),
+                "email": attrs.get('social_phone_number'),
+                'auth_type': VIA_TELEGRAM
+            }
+        elif input_type == "icloud":
+            data = {
+                "email": attrs.get('social_phone_number'),
+                'auth_type': VIA_ICLOUD
+            }
+        elif input_type == "phone":
+            data = {
+                "phone_number": attrs.get('social_phone_number'),
                 'auth_type': VIA_PHONE
             }
         elif input_type is None:
@@ -167,13 +177,6 @@ class SignUpSerializer(serializers.ModelSerializer):
             print('topildi')
             User.objects.get(query).delete()
 
-        # if value and User.objects.filter(email=value).exists():
-        #     data = {
-        #         "success": False,
-        #         "message": "This Email address is already being used!"
-        #     }
-        #     raise ValidationError(data)
-
         if value and User.objects.filter(phone_number=value).exists():
             data = {
                 "success": False,
@@ -181,7 +184,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             }
             raise ValidationError(data)
 
-        if check_phone(value) == "phone":  # 998981234555
+        if check_phone_or_social(value) == "phone":  # 998981234555
             phone_parser(value, self.initial_data.get("country_code"))
         return value
 

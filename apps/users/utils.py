@@ -1,11 +1,13 @@
 import threading
+import phonenumbers
+
 from decouple import config
 from eskiz_sms import EskizSMS
-from django.template.loader import render_to_string
-from rest_framework.exceptions import ValidationError
-import phonenumbers
-import threading
+
 from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+
+from rest_framework.exceptions import ValidationError
 
 
 class EmailThread(threading.Thread):

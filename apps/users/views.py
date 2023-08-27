@@ -13,7 +13,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .utils import send_email, send_phone_notification
 from .serailizers import (ChangeUserInformationSerializer, MyTokenObtainPairSerializer,
                           CustomTokenRefreshSerializer, LogoutSerializer, SignUpSerializer)
-from .models import User, CODE_VERIFIED, DONE, VIA_SOCIAL, VIA_PHONE
+from .models import User, CODE_VERIFIED, DONE, VIA_GOOGLE, VIA_APPLE, VIA_TELEGRAM, VIA_PHONE
 
 
 class LoginView(TokenObtainPairView):

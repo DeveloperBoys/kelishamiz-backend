@@ -28,6 +28,10 @@ LOCAL_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_PARTY_APPS
@@ -80,6 +84,27 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': 'your-google-client-id',
+            'secret': 'your-google-secret',
+            'key': ''
+        }
+    },
+    'telegram': {
+        'BOT_TOKEN': 'your-telegram-bot-token',
+        'WEBHOOK_SECRET': 'your-webhook-secret',
+    },
+    'apple': {
+        'TEAM_ID': 'your-apple-team-id',
+        'CLIENT_ID': 'your-apple-client-id',
+        'SECRET': 'your-apple-secret',
+        'KEY_ID': 'your-apple-key-id',
+        'SCOPE': ['email', 'name'],
+    }
+}
 
 
 # Internationalization

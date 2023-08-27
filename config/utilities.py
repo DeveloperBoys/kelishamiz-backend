@@ -14,8 +14,8 @@ def check_phone_or_social(user_input):
         return "google"
     elif user_input.startswith("telegram:"):
         return "telegram"
-    elif user_input.startswith("icloud:"):
-        return "icloud"
+    elif user_input.startswith("apple:"):
+        return "apple"
     else:
         data = {
             "success": False,

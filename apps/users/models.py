@@ -15,11 +15,11 @@ ORDINARY_USER, SUPER_USER = (
     "super_user"
 )
 
-VIA_PHONE, VIA_GOOGLE, VIA_TELEGRAM, VIA_ICLOUD = (
+VIA_PHONE, VIA_GOOGLE, VIA_TELEGRAM, VIA_APPLE = (
     "via_phone",
     "via_google",
     "via_telegram",
-    "via_icloud"
+    "via_apple"
 )
 
 NEW, CODE_VERIFIED, DONE = (
@@ -39,8 +39,9 @@ class UserConfirmation(models.Model):
         (VIA_PHONE, VIA_PHONE),
         (VIA_GOOGLE, VIA_GOOGLE),
         (VIA_TELEGRAM, VIA_TELEGRAM),
-        (VIA_ICLOUD, VIA_ICLOUD)
+        (VIA_APPLE, VIA_APPLE)
     )
+
     code = models.CharField(max_length=4)
     user = models.ForeignKey(
         'user.User', on_delete=models.CASCADE, related_name='verify_codes')
@@ -111,7 +112,7 @@ class User(AbstractUser, BaseModel):
         (VIA_PHONE, VIA_PHONE),
         (VIA_GOOGLE, VIA_GOOGLE),
         (VIA_TELEGRAM, VIA_TELEGRAM),
-        (VIA_ICLOUD, VIA_ICLOUD)
+        (VIA_APPLE, VIA_APPLE)
     )
 
     user_roles = models.CharField(

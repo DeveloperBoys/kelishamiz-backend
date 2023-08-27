@@ -12,7 +12,7 @@ from django.contrib.auth.password_validation import validate_password
 
 from .utils import phone_parser, send_email, send_phone_notification
 from config.utilities import check_phone_or_social, check_user_type
-from .models import User, VIA_PHONE, VIA_GOOGLE, VIA_TELEGRAM, VIA_ICLOUD, NEW, DONE, CODE_VERIFIED
+from .models import User, VIA_PHONE, VIA_GOOGLE, VIA_TELEGRAM, VIA_APPLE, NEW, DONE, CODE_VERIFIED
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -142,10 +142,10 @@ class SignUpSerializer(serializers.ModelSerializer):
                 "email": attrs.get('social_phone_number'),
                 'auth_type': VIA_TELEGRAM
             }
-        elif input_type == "icloud":
+        elif input_type == "apple":
             data = {
                 "email": attrs.get('social_phone_number'),
-                'auth_type': VIA_ICLOUD
+                'auth_type': VIA_APPLE
             }
         elif input_type == "phone":
             data = {

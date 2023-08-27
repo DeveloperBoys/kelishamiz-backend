@@ -1,7 +1,7 @@
 from django.urls import path
 from apps.classifieds import views
 
-urlpatterns = [
+classified_urlpatterns = [
     # DynamicField URLs
     path('dynamic-fields/', views.DynamicFieldListView.as_view(),
          name='dynamicfield-list'),
@@ -32,3 +32,8 @@ urlpatterns = [
     path('classifieds/create/', views.ClassifiedCreateView.as_view(),
          name='classified-create'),
 ]
+
+user_urlpatterns = []
+
+
+urlpatterns = classified_urlpatterns + user_urlpatterns

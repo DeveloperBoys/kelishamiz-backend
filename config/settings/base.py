@@ -23,6 +23,7 @@ BASE_APPS = [
 
 LOCAL_APPS = [
     'apps.classifieds.apps.ClassifiedsConfig',
+    'apps.likes.apps.LikesConfig',
     'apps.users.apps.UsersConfig',
 ]
 

@@ -35,6 +35,7 @@ classified_urlpatterns = [
          name='classified-detail'),
     path('classifieds/create/', classified_viws.ClassifiedCreateView.as_view(),
          name='classified-create'),
+
 ]
 
 likes_urlpatterns = [
@@ -46,6 +47,5 @@ likes_urlpatterns = [
 ]
 
 user_urlpatterns = []
-
 
 urlpatterns = classified_urlpatterns + likes_urlpatterns + user_urlpatterns

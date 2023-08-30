@@ -105,11 +105,11 @@ If you prefer to use Docker for running the project, follow these steps:
 
 # Contributing
 
-We welcome contributions to enhance the functionality and features of the backend. Please refer to the [CONTRIBUTING.md]() file for guidelines.
+We welcome contributions to enhance the functionality and features of the backend. Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines.
 
 # License
 
-This project is licensed under the [MIT License](https://github.com/murtazox04/kelishamiz-backend/blob/main/LICENSE).
+This project is licensed under the [MIT License](LICENSE).
 
 For detailed design architecture, please refer to the [Figma Design](<https://www.figma.com/file/X4ODCwpCZ117AUsrqpQ85f/E'lonlar-sayti-(Copy)?type=design&node-id=2%3A2&mode=design&t=GVNEei7KwNuTrEDI-1>).
 

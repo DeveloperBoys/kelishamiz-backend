@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import ClassifiedLike
-from classifieds.serializers import ClassifiedListSerializer
+from apps.classifieds.serializers import ClassifiedListSerializer
 
 
 class ClassifiedLikeSerializer(serializers.ModelSerializer):

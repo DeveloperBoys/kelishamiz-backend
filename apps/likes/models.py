@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from classifieds.models import Classified
+from apps.classifieds.models import Classified
 
 
 User = get_user_model()

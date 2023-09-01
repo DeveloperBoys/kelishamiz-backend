@@ -39,10 +39,11 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
     imageUrl = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source='created_at')
+    isLiked = serializers.BooleanField(source='is_liked')
 
     class Meta:
         model = Classified
-        fields = ('title', 'imageUrl', 'price', 'is_liked', 'createdAt')
+        fields = ('title', 'imageUrl', 'price', 'isLiked', 'createdAt')
 
     def get_price(self, obj):
         classified_detail = ClassifiedDetail.objects.filter(

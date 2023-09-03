@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 
 email_regex = re.compile(
     r"([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\[[\t -Z^-~]*])")
-phone_regex = re.compile(r"^998([378]{2}|(9[013-57-9]))\d{7}$")
+phone_regex = re.compile(r"^\+998([378]{2}|(9[013-57-9]))\d{7}$")
 username_regex = r"^[a-zA-Z0-9_-]+$"
 
 

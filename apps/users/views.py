@@ -11,9 +11,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .utils import send_email, send_phone_notification
-from .serializers import (ChangeUserInformationSerializer, MyTokenObtainPairSerializer,
-                          CustomTokenRefreshSerializer, LogoutSerializer, SignUpSerializer)
-from .models import User, CODE_VERIFIED, DONE, VIA_PHONE
+from .serializers import SignUpSerializer, ChangeUserInformationSerializer, MyTokenObtainPairSerializer, \
+    CustomTokenRefreshSerializer, LogoutSerializer
+from .models import User, CODE_VERIFIED, DONE, VIA_SOCIAL, VIA_PHONE
 
 
 class LoginView(TokenObtainPairView):
@@ -54,7 +54,7 @@ class VerifyApiView(APIView):
     permission_classes = (IsAuthenticated, )
 
     def post(self, request, *args, **kwargs):
-        user, code = self.request.user, request.data.get('code')
+        user, code = self.request.user, self.request.data.get('code')
         # user = self.request.user
         # code = self.request.data.get('code')
         self.check_verify(user, code)
@@ -90,10 +90,11 @@ class GetNewVerification(APIView):
         self.check_verification(user)
         # if user.auth_type == VIA_EMAIL:
         #     code = user.create_verify_code(VIA_EMAIL)
-        # send_email(user.email, code)
+        #     send_email(user.email, code)
         if user.auth_type == VIA_PHONE:
             code = user.create_verify_code(VIA_PHONE)
-            send_phone_notification(user.phone_number, code)
+            # send_phone_notification(user.phone_number, code)
+            send_email(user.phone_number, code)
         else:
             data = {
                 "message": "You need to enter email or phone_number",

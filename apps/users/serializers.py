@@ -1,18 +1,17 @@
-from rest_framework import serializers, exceptions
-from rest_framework.generics import get_object_or_404
-from rest_framework.exceptions import ValidationError, PermissionDenied
-
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
-
-from django.db.models import Q
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
+from rest_framework import exceptions
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.generics import get_object_or_404
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import AccessToken
 
-from .utils import phone_parser
-from .models import User, NEW, DONE, CODE_VERIFIED, VIA_PHONE
 from config.utilities import check_phone, check_user_type
+from .utils import phone_parser, send_email, send_phone_notification
+from users.models import User, VIA_SOCIAL, VIA_PHONE, CODE_VERIFIED, DONE, NEW
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -24,10 +23,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             read_only=True, required=False)
 
     def auth_validate(self, attrs):
+        print(attrs)
         user_input = attrs.get('userinput')
         print(user_input)
         if check_user_type(user_input) == "username":
             username = attrs.get('userinput')
+        elif check_user_type(user_input) == "email":
+            user = self.get_user(email__iexact=user_input)
+            username = user.username
         elif check_user_type(user_input) == "phone":
             user = self.get_user(phone_number=user_input)
             username = user.username
@@ -92,7 +95,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super(SignUpSerializer, self).__init__(*args, **kwargs)
-        self.fields['phone_number'] = serializers.CharField(required=False)
+        self.fields['phone_number'] = serializers.CharField(
+            required=False)
 
     class Meta:
         model = User
@@ -108,10 +112,16 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = super(SignUpSerializer, self).create(validated_data)
+        print(user)
+        # if user.auth_type == VIA_SOCIAL:
+        #     code = user.create_verify_code(user.auth_type)
+        #     print(code)
+        #     send_email(user.email, code)
+        #     print("email sending..")
         if user.auth_type == VIA_PHONE:
             code = user.create_verify_code(user.auth_type)
-            print(user.phone_number, code)
-            # send_phone_notification(user.phone_number, code)
+            send_email(user.email, code)
+            send_phone_notification(user.phone_number, code)
         user.save()
         return user
 
@@ -125,6 +135,11 @@ class SignUpSerializer(serializers.ModelSerializer):
         user_input = str(attrs.get('phone_number')).lower()
         print(user_input)
         input_type = check_phone(user_input)
+        # if input_type == "email":
+        #     data = {
+        #         "email": attrs.get('email_phone_number'),
+        #         'auth_type': VIA_EMAIL
+        #     }
         if input_type == "phone":
             data = {
                 "phone_number": attrs.get('phone_number'),
@@ -145,15 +160,23 @@ class SignUpSerializer(serializers.ModelSerializer):
         # data.update(password=attrs.get('password'))
         return data
 
-    # value = "998900459442"
-    def validate_phone_number(self, value):
+    # value = "samandar@gmail.com"
+    def validate_email_phone_number(self, value):
         value = value.lower()
-        query = Q(phone_number=value) & (
-            Q(auth_status=NEW) | Q(auth_status=CODE_VERIFIED))
+        query = (Q(phone_number=value) | Q(email=value)) & (
+            Q(auth_status=NEW) | Q(auth_status=CODE_VERIFIED)
+        )
         print(query)
         if User.objects.filter(query).exists():
             print('topildi')
             User.objects.get(query).delete()
+
+        # if value and User.objects.filter(email=value).exists():
+        #     data = {
+        #         "success": False,
+        #         "message": "This Email address is already being used!"
+        #     }
+        #     raise ValidationError(data)
 
         if value and User.objects.filter(phone_number=value).exists():
             data = {
@@ -174,6 +197,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class ChangeUserInformationSerializer(serializers.Serializer):
     bio = serializers.CharField(write_only=True, required=True)
+    sex = serializers.CharField(write_only=True, required=True)
     first_name = serializers.CharField(write_only=True, required=True)
     username = serializers.CharField(write_only=True, required=True)
     password = serializers.CharField(write_only=True, required=True)
@@ -219,6 +243,7 @@ class ChangeUserInformationSerializer(serializers.Serializer):
         instance.username = validated_data.get('username', instance.username)
         instance.password = validated_data.get('password', instance.password)
         instance.bio = validated_data.get('bio', instance.bio)
+        instance.sex = validated_data.get('sex', instance.sex)
 
         if validated_data.get('password'):
             instance.set_password(validated_data.get('password'))

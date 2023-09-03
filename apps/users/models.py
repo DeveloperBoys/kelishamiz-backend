@@ -10,16 +10,9 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-ORDINARY_USER, SUPER_USER = (
-    "ordinary_user",
-    "super_user"
-)
-
-VIA_PHONE, VIA_GOOGLE, VIA_TELEGRAM, VIA_APPLE = (
+VIA_PHONE, VIA_SOCIAL = (
     "via_phone",
-    "via_google",
-    "via_telegram",
-    "via_apple"
+    "via_social"
 )
 
 NEW, CODE_VERIFIED, DONE = (
@@ -55,9 +48,7 @@ class UserConfirmation(models.Model):
     """
     TYPE_CHOICES = (
         (VIA_PHONE, VIA_PHONE),
-        (VIA_GOOGLE, VIA_GOOGLE),
-        (VIA_TELEGRAM, VIA_TELEGRAM),
-        (VIA_APPLE, VIA_APPLE)
+        (VIA_SOCIAL, VIA_SOCIAL)
     )
 
     code = models.CharField(max_length=4)
@@ -87,10 +78,6 @@ class User(AbstractUser):
         regex=r"^\+998([378]{2}|(9[013-57-9]))\d{7}$",
         message="Your phone number must be connected with 9 and 12 characters! For example: 998998887766"
     )
-    USER_ROLES = (
-        (ORDINARY_USER, ORDINARY_USER),
-        (SUPER_USER, SUPER_USER)
-    )
     AUTH_STATUS = (
         (NEW, NEW),
         (CODE_VERIFIED, CODE_VERIFIED),
@@ -98,15 +85,12 @@ class User(AbstractUser):
     )
     AUTH_TYPE_CHOICES = (
         (VIA_PHONE, VIA_PHONE),
-        (VIA_GOOGLE, VIA_GOOGLE),
-        (VIA_TELEGRAM, VIA_TELEGRAM),
-        (VIA_APPLE, VIA_APPLE)
+        (VIA_SOCIAL, VIA_SOCIAL)
     )
 
     guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-    user_roles = models.CharField(
-        max_length=31, choices=USER_ROLES, default=ORDINARY_USER
-    )
+    auth_type = models.CharField(
+        max_length=31, choices=AUTH_TYPE_CHOICES)
     auth_status = models.CharField(
         max_length=31, choices=AUTH_STATUS, default=NEW)
     profile_image = models.FileField(
@@ -114,7 +98,7 @@ class User(AbstractUser):
     )
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(
-        max_length=12, unique=True, validators=[_validate_phone])
+        max_length=13, unique=True, validators=[_validate_phone])
     birth_date = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -134,7 +118,7 @@ class User(AbstractUser):
         """
         Create and store a verification code for the user.
         """
-        code = "".join(str(random.randint(0, 9)) for _ in range(4))
+        code = "".join(str(random.randint(0, 9)) for _ in range(6))
         UserConfirmation.objects.create(
             user=self,
             verify_type=verify_type,

@@ -47,8 +47,8 @@ def send_email(email, code):
 
 
 def send_phone_notification(phone, code):
-    email = config('eskiz_email')
-    password = config('eskiz_password')
+    email = config('ESKIZ_EMAIL')
+    password = config('ESKIZ_PASSWORD')
     message = f"Assalomu alaykum! Sizning tasdiqlash kodingiz: {code}"
     client = EskizSMS(email=email, password=password)
     # client.token.set(your_saved_token)
@@ -63,7 +63,6 @@ def phone_checker(p_number):
 def phone_parser(p_number, c_code=None):
     try:
         phone_checker(p_number)
-        p_number = '+'+p_number
         return phonenumbers.parse(p_number, c_code)
     except Exception as e:
         raise ValidationError("Phone number is not valid")

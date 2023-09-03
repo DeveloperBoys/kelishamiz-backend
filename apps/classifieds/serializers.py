@@ -67,7 +67,7 @@ class ClassifiedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Classified
         fields = ('title', 'category', 'detail',
-                  'images', 'is_liked' 'createdAt')
+                  'images', 'is_liked', 'createdAt')
 
 
 class ClassifiedCreateSerializer(serializers.ModelSerializer):

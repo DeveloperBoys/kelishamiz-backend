@@ -31,6 +31,24 @@ NEW, CODE_VERIFIED, DONE = (
 PHONE_EXPIRE = 2
 
 
+class UserManagerWithRandomUsername(UserManager):
+    """
+    Custom user manager that generates random usernames if not provided.
+    """
+
+    def create_user(self, username=None, email=None, password=None, **extra_fields):
+        if not username:
+            username = self.generate_random_username()
+        return super().create_user(username, email, password, **extra_fields)
+
+    @staticmethod
+    def generate_random_username():
+        temp_username = f"SurxonBazar-{uuid.uuid4().hex[:8]}"
+        while User.objects.filter(username=temp_username).exists():
+            temp_username += str(random.randint(0, 9))
+        return temp_username
+
+
 class UserConfirmation(models.Model):
     """
     Model to store user verification codes and related information.
@@ -61,37 +79,7 @@ class UserConfirmation(models.Model):
         super(UserConfirmation, self).save(*args, **kwargs)
 
 
-class BaseModel(models.Model):
-    """
-    Abstract base model with common fields for other models.
-    """
-    guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-    created_time = models.DateTimeField(auto_now_add=True)
-    updated_time = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-
-class UserManagerWithRandomUsername(UserManager):
-    """
-    Custom user manager that generates random usernames if not provided.
-    """
-
-    def create_user(self, username=None, email=None, password=None, **extra_fields):
-        if not username:
-            username = self.generate_random_username()
-        return super().create_user(username, email, password, **extra_fields)
-
-    @staticmethod
-    def generate_random_username():
-        temp_username = f"SurxonBazar-{uuid.uuid4().hex[:8]}"
-        while User.objects.filter(username=temp_username).exists():
-            temp_username += str(random.randint(0, 9))
-        return temp_username
-
-
-class User(AbstractUser, BaseModel):
+class User(AbstractUser):
     """
     Custom user model with extended fields and methods.
     """
@@ -115,6 +103,7 @@ class User(AbstractUser, BaseModel):
         (VIA_APPLE, VIA_APPLE)
     )
 
+    guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     user_roles = models.CharField(
         max_length=31, choices=USER_ROLES, default=ORDINARY_USER
     )
@@ -127,6 +116,9 @@ class User(AbstractUser, BaseModel):
     phone_number = models.CharField(
         max_length=12, unique=True, validators=[_validate_phone])
     birth_date = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     objects = UserManagerWithRandomUsername()
 
     class Meta:

@@ -10,9 +10,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.password_validation import validate_password
 
-from .utils import phone_parser, send_email, send_phone_notification
-from config.utilities import check_phone_or_social, check_user_type
-from .models import User, VIA_PHONE, VIA_GOOGLE, VIA_TELEGRAM, VIA_APPLE, NEW, DONE, CODE_VERIFIED
+from .utils import phone_parser
+from .models import User, NEW, DONE, CODE_VERIFIED, VIA_PHONE
+from config.utilities import check_phone, check_user_type
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -24,7 +24,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             read_only=True, required=False)
 
     def auth_validate(self, attrs):
-        print(attrs)
         user_input = attrs.get('userinput')
         print(user_input)
         if check_user_type(user_input) == "username":
@@ -109,16 +108,10 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = super(SignUpSerializer, self).create(validated_data)
-        print(user)
-        if user.auth_type == VIA_GOOGLE:
-            code = user.create_verify_code(user.auth_type)
-            print(code)
-            send_email(user.email, code)
-            print("email sending...")
         if user.auth_type == VIA_PHONE:
             code = user.create_verify_code(user.auth_type)
-            send_phone_notification(user.phone_number, code)
-            print("sms sending...")
+            print(user.phone_number, code)
+            # send_phone_notification(user.phone_number, code)
         user.save()
         return user
 
@@ -129,27 +122,12 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def auth_validate(attrs):
-        user_input = str(attrs.get('phone_number_or_social')).lower()
+        user_input = str(attrs.get('phone_number')).lower()
         print(user_input)
-        input_type = check_phone_or_social(user_input)
-        if input_type == "google":
+        input_type = check_phone(user_input)
+        if input_type == "phone":
             data = {
-                "email": attrs.get('social_phone_number'),
-                'auth_type': VIA_GOOGLE
-            }
-        elif input_type == "telegram":
-            data = {
-                "email": attrs.get('social_phone_number'),
-                'auth_type': VIA_TELEGRAM
-            }
-        elif input_type == "apple":
-            data = {
-                "email": attrs.get('social_phone_number'),
-                'auth_type': VIA_APPLE
-            }
-        elif input_type == "phone":
-            data = {
-                "phone_number": attrs.get('social_phone_number'),
+                "phone_number": attrs.get('phone_number'),
                 'auth_type': VIA_PHONE
             }
         elif input_type is None:
@@ -184,7 +162,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             }
             raise ValidationError(data)
 
-        if check_phone_or_social(value) == "phone":  # 998981234555
+        if check_phone(value) == "phone":  # 998981234555
             phone_parser(value, self.initial_data.get("country_code"))
         return value
 

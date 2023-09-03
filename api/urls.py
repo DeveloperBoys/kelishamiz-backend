@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.classifieds import views as classified_viws
 from apps.likes import views as likes_views
+from apps.users import views as user_views
 
 classified_urlpatterns = [
     # Category URLs
@@ -28,6 +29,17 @@ likes_urlpatterns = [
          likes_views.DeleteClassifiedLikeView.as_view(), name='delete-like'),
 ]
 
-user_urlpatterns = []
+user_urlpatterns = [
+    path('login/', user_views.LoginView.as_view(), name='login'),
+    path('login/refresh/', user_views.CustomTokenRefreshView.as_view(),
+         name="token_refresh"),
+    path('logout/', user_views.LogoutView.as_view(), name="logout"),
+    path("signup/", user_views.CreateUserView.as_view(), name='signup'),
+    path("verify/", user_views.VerifyApiView.as_view(), name='verify_code'),
+    path('new-verify/', user_views.GetNewVerification.as_view(),
+         name='new_verify_code'),
+    path('change-user-information/', user_views.ChangeUserView.as_view(),
+         name='change_user_information')
+]
 
 urlpatterns = classified_urlpatterns + likes_urlpatterns + user_urlpatterns

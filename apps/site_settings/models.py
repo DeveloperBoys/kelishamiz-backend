@@ -94,7 +94,7 @@ class AdType(models.Model):
     )
 
     name = models.CharField(max_length=250)
-    validity_period = models.CharField(max_length=2, choices=VALIDITY_CHOICES)
+    validity_period = models.CharField(max_length=3, choices=VALIDITY_CHOICES)
     attributes = models.ManyToManyField(AdTypeAttribute, blank=True)
 
     class Meta:

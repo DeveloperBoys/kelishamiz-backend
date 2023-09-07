@@ -10,7 +10,7 @@ from .models import (
 )
 
 
-class SocialMediaSerializer(serializers.ModelField):
+class SocialMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialMedia
         fields = ['name', 'url']
@@ -49,12 +49,12 @@ class BannerSerializer(serializers.ModelSerializer):
 class AdTypeAttributeSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdTypeAttribute
-        fields = ['name',]
+        fields = ['name']
 
 
 class AdTypeSerializer(serializers.ModelSerializer):
     validityPeriod = serializers.CharField(source='validity_period')
-    atttibutes = AdTypeAttributeSerializer(many=True)
+    attributes = AdTypeAttributeSerializer(many=True)  # Fix the typo here
 
     class Meta:
         model = AdType

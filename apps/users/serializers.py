@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from config.utilities import check_phone, check_user_type
 from .utils import phone_parser, send_email, send_phone_notification
-from users.models import User, VIA_SOCIAL, VIA_PHONE, CODE_VERIFIED, DONE, NEW
+from .models import User, VIA_SOCIAL, VIA_PHONE, CODE_VERIFIED, DONE, NEW
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

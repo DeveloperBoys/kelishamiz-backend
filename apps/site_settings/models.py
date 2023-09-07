@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext as _
 
 
 class SocialMedia(models.Model):
@@ -52,9 +53,53 @@ class CompanyInfo(models.Model):
 
 
 class Banner(models.Model):
+    """
+    Model for storing banners with titles, descriptions, images, and URLs.
+    """
     title = models.CharField(max_length=150)
+    short_description = models.CharField(max_length=350)
     image = models.FileField()
+    url = models.URLField()
+
+    class Meta:
+        verbose_name = "Banner"
+        verbose_name_plural = "Banners"
+
+    def __str__(self):
+        return self.title
+
+
+class AdTypeAttribute(models.Model):
+    """
+    Model for storing attributes of advertisement types.
+    """
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "Ad Type Attribute"
+        verbose_name_plural = "Ad Type Attributes"
+
+    def __str__(self):
+        return self.name
 
 
 class AdType(models.Model):
-    ...
+    """
+    Model for defining advertisement types with names, validity periods, and attributes.
+    """
+    VALIDITY_CHOICES = (
+        ('1d', _('1 day')),
+        ('7d', _('7 days')),
+        ('30d', _('40 days')),
+    )
+
+    name = models.CharField(max_length=250)
+    validity_period = models.CharField(max_length=2, choices=VALIDITY_CHOICES)
+    attributes = models.ManyToManyField(AdTypeAttribute, blank=True)
+
+    class Meta:
+        verbose_name = "Ad Type"
+        verbose_name_plural = "Ad Types"
+
+    def __str__(self):
+        return self.name

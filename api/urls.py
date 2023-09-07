@@ -3,6 +3,7 @@ from django.urls import path
 from apps.classifieds import views as classified_viws
 from apps.likes import views as likes_views
 from apps.users import views as user_views
+from apps.site_settings import views as site_settings_views
 
 classified_urlpatterns = [
     # Category URLs
@@ -42,4 +43,37 @@ user_urlpatterns = [
          name='change_user_information')
 ]
 
-urlpatterns = classified_urlpatterns + likes_urlpatterns + user_urlpatterns
+site_settings_urlpatterns = [
+    path('social-media/', site_settings_views.SocialMediaListCreateView.as_view(),
+         name='social-media-list-create'),
+    path('social-media/<int:pk>/', site_settings_views.SocialMediaDetailView.as_view(),
+         name='social-media-detail'),
+
+    path('app-store-link/', site_settings_views.AppStoreLinkListCreateView.as_view(),
+         name='app-store-link-list-create'),
+    path('app-store-link/<int:pk>/',
+         site_settings_views.AppStoreLinkDetailView.as_view(), name='app-store-link-detail'),
+
+    path('company-info/', site_settings_views.CompanyInfoListCreateView.as_view(),
+         name='company-info-list-create'),
+    path('company-info/<int:pk>/', site_settings_views.CompanyInfoDetailView.as_view(),
+         name='company-info-detail'),
+
+    path('banners/', site_settings_views.BannerListCreateView.as_view(),
+         name='banner-list-create'),
+    path('banners/<int:pk>/',
+         site_settings_views.BannerDetailView.as_view(), name='banner-detail'),
+
+    path('ad-type-attributes/', site_settings_views.AdTypeAttributeListCreateView.as_view(),
+         name='ad-type-attribute-list-create'),
+    path('ad-type-attributes/<int:pk>/',
+         site_settings_views.AdTypeAttributeDetailView.as_view(), name='ad-type-attribute-detail'),
+
+    path('ad-types/', site_settings_views.AdTypeListCreateView.as_view(),
+         name='ad-type-list-create'),
+    path('ad-types/<int:pk>/', site_settings_views.AdTypeDetailView.as_view(),
+         name='ad-type-detail'),
+]
+
+urlpatterns = (classified_urlpatterns + likes_urlpatterns +
+               user_urlpatterns + site_settings_urlpatterns)

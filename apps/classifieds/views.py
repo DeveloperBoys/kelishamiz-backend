@@ -11,7 +11,7 @@ from .serializers import (
 
 
 class CategoryListView(generics.ListCreateAPIView):
-    queryset = Category.objects.all()
+    queryset = Category.objects.filter(parent=None)
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly, )
 
@@ -26,6 +26,7 @@ class ClassifiedListView(generics.ListCreateAPIView):
     queryset = Classified.objects.all()
     serializer_class = ClassifiedListSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+    http_method_names = ['get', ]
 
 
 class ClassifiedDetailView(generics.RetrieveUpdateDestroyAPIView):

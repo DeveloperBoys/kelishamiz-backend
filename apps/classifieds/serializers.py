@@ -6,13 +6,40 @@ from .models import Category, DynamicField, Classified, ClassifiedDetail, Classi
 class DynamicFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = DynamicField
-        fields = '__all__'
+        fields = ('key', 'value')
+
+
+class ChildCategorySerializer(serializers.ModelSerializer):
+    iconUrl = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'iconUrl')
+
+    def get_iconUrl(self, obj):
+        if obj.icon:
+            return obj.icon_url()
+        return None
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    iconUrl = serializers.SerializerMethodField()
+    childs = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('id', 'name', 'iconUrl', 'childs')
+
+    def get_iconUrl(self, obj):
+        if obj.icon:
+            return obj.icon_url()
+        return None
+
+    def get_childs(self, obj):
+        childs = obj.children.all()
+        if childs.exists():
+            return ChildCategorySerializer(childs, many=True).data
+        return None
 
 
 class ClassifiedDetailSerializer(serializers.ModelSerializer):

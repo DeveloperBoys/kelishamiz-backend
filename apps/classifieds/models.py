@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -18,7 +19,7 @@ class Category(Base):
     """
     name = models.CharField(max_length=250)
     parent = models.ForeignKey(
-        'self', on_delete=models.CASCADE, null=True, blank=True)
+        'self', on_delete=models.CASCADE, related_name='children', null=True, blank=True)
     icon = models.FileField(
         upload_to='classifieds/category/icons/', null=True, blank=True)
 
@@ -28,6 +29,10 @@ class Category(Base):
 
     def __str__(self):
         return self.name
+
+    def icon_url(self):
+        if self.icon:
+            return "%s%s" % (settings.HOST, self.icon.url)
 
 
 class DynamicField(models.Model):

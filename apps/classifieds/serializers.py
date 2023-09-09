@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from .models import Category, DynamicField, Classified, ClassifiedDetail, ClassifiedImage
+from .models import (
+    Category,
+    Classified,
+    DynamicField,
+    ClassifiedImage,
+    ClassifiedDetail
+)
 
 
 class DynamicFieldSerializer(serializers.ModelSerializer):

@@ -22,6 +22,7 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
+    'apps.ads.apps.AdsConfig',
     'apps.likes.apps.LikesConfig',
     'apps.users.apps.UsersConfig',
     'apps.classifieds.apps.ClassifiedsConfig',

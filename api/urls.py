@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.classifieds import views as classified_viws
 from apps.likes import views as likes_views
+from apps.ads import views as ads_views
 from apps.users import views as user_views
 from apps.site_settings import views as site_settings_views
 
@@ -28,6 +29,16 @@ likes_urlpatterns = [
     path('get-likes/', likes_views.GetClassifiedLikeView.as_view(), name='get-likes'),
     path('delete-like/<int:pk>/',
          likes_views.DeleteClassifiedLikeView.as_view(), name='delete-like'),
+]
+
+ads_urlpatterns = [
+    # List and create ClassifiedAd instances
+    path('classifiedads/', ads_views.ClassifiedAdListCreateView.as_view(),
+         name='classifiedad-list-create'),
+
+    # Retrieve, update, or delete an individual ClassifiedAd instance
+    path('classifiedads/<int:pk>/', ads_views.ClassifiedAdRetrieveUpdateDestroyView.as_view(),
+         name='classifiedad-retrieve-update-destroy'),
 ]
 
 user_urlpatterns = [
@@ -76,4 +87,4 @@ site_settings_urlpatterns = [
 ]
 
 urlpatterns = (classified_urlpatterns + likes_urlpatterns +
-               user_urlpatterns + site_settings_urlpatterns)
+               user_urlpatterns + site_settings_urlpatterns + ads_urlpatterns)

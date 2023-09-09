@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+
 User = get_user_model()
 
 
@@ -56,6 +57,9 @@ class Classified(Base):
     class Meta:
         verbose_name = "Classified"
         verbose_name_plural = "Classifieds"
+
+    def __str__(self) -> str:
+        return self.title
 
 
 class ClassifiedDetail(Base):

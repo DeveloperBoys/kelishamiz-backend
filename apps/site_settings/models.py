@@ -87,14 +87,13 @@ class AdType(models.Model):
     """
     Model for defining advertisement types with names, validity periods, and attributes.
     """
-    VALIDITY_CHOICES = (
-        ('1d', _('1 day')),
-        ('7d', _('7 days')),
-        ('30d', _('40 days')),
-    )
 
     name = models.CharField(max_length=250)
-    validity_period = models.CharField(max_length=3, choices=VALIDITY_CHOICES)
+    validity_period = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="Validity period for the advertisement in days"
+    )
     attributes = models.ManyToManyField(AdTypeAttribute, blank=True)
 
     class Meta:

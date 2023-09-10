@@ -67,38 +67,3 @@ class Banner(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class AdTypeAttribute(models.Model):
-    """
-    Model for storing attributes of advertisement types.
-    """
-    name = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name = "Ad Type Attribute"
-        verbose_name_plural = "Ad Type Attributes"
-
-    def __str__(self):
-        return self.name
-
-
-class AdType(models.Model):
-    """
-    Model for defining advertisement types with names, validity periods, and attributes.
-    """
-
-    name = models.CharField(max_length=250)
-    validity_period = models.IntegerField(
-        blank=True,
-        null=True,
-        help_text="Validity period for the advertisement in days"
-    )
-    attributes = models.ManyToManyField(AdTypeAttribute, blank=True)
-
-    class Meta:
-        verbose_name = "Ad Type"
-        verbose_name_plural = "Ad Types"
-
-    def __str__(self):
-        return self.name

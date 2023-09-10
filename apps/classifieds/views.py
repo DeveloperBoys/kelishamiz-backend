@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions
 
-from .permissions import ClassifiedOwnerOrReadOnly, IsAdminOrReadOnly
+from apps.permissions.permissions import ClassifiedOwnerOrReadOnly, IsAdminOrReadOnly
 from .models import Category, Classified
 from .serializers import (
     CategorySerializer,

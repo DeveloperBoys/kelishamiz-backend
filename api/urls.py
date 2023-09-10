@@ -20,7 +20,6 @@ classified_urlpatterns = [
          name='classified-detail'),
     path('classifieds/create/', classified_viws.ClassifiedCreateView.as_view(),
          name='classified-create'),
-
 ]
 
 likes_urlpatterns = [

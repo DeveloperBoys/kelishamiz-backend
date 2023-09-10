@@ -1,6 +1,15 @@
 from rest_framework import permissions
 
 
+# class AdminOnlyPermission(permissions.BasePermission):
+#     def has_permission(self, request, view):
+#         # Allow GET requests for all users
+#         if request.method == 'GET':
+#             return True
+#         # Allow other requests only for admin users
+#         return request.user and request.user.is_staff
+
+
 class ClassifiedOwner(permissions.BasePermission):
     """
     Custom permission to allow only classified owners to perform CRUD operations.

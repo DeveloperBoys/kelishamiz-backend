@@ -1,7 +1,31 @@
 from rest_framework import generics, permissions
 
-from .models import ClassifiedAd
-from .serializers import ClassifiedAdSerializer
+from .models import ClassifiedAd, AdType, AdTypeAttribute
+from .serializers import ClassifiedAdSerializer, AdTypeSerializer, AdTypeAttributeSerializer
+
+
+class AdTypeAttributeListCreateView(generics.ListCreateAPIView):
+    queryset = AdTypeAttribute.objects.all()
+    serializer_class = AdTypeAttributeSerializer
+    permission_classes = [AdminOnlyPermission]
+
+
+class AdTypeAttributeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = AdTypeAttribute.objects.all()
+    serializer_class = AdTypeAttributeSerializer
+    permission_classes = [AdminOnlyPermission]
+
+
+class AdTypeListCreateView(generics.ListCreateAPIView):
+    queryset = AdType.objects.all()
+    serializer_class = AdTypeSerializer
+    permission_classes = [AdminOnlyPermission]
+
+
+class AdTypeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = AdType.objects.all()
+    serializer_class = AdTypeSerializer
+    permission_classes = [AdminOnlyPermission]
 
 
 class ClassifiedAdListCreateView(generics.ListCreateAPIView):

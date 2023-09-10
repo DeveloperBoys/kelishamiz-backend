@@ -49,7 +49,7 @@ class Classified(Base):
     Classified model to store basic classifieds information.
     """
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=150)
     is_active = models.BooleanField(default=False)
     is_liked = models.BooleanField(default=False)

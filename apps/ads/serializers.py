@@ -15,7 +15,8 @@ class AdTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AdType
-        fields = ['name', 'validityPeriod', 'attributes']
+        fields = ['name', 'icon', 'price',
+                  'short_description' 'validityPeriod', 'attributes']
 
 
 class ClassifiedAdSerializer(serializers.ModelSerializer):

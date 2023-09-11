@@ -31,6 +31,15 @@ likes_urlpatterns = [
 ]
 
 ads_urlpatterns = [
+    path('ad-type-attributes/', ads_views.AdTypeAttributeListCreateView.as_view(),
+         name='ad-type-attribute-list-create'),
+    path('ad-type-attributes/<int:pk>/',
+         ads_views.AdTypeAttributeDetailView.as_view(), name='ad-type-attribute-detail'),
+
+    path('ad-types/', ads_views.AdTypeListCreateView.as_view(),
+         name='ad-type-list-create'),
+    path('ad-types/<int:pk>/', ads_views.AdTypeDetailView.as_view(),
+         name='ad-type-detail'),
     # List and create ClassifiedAd instances
     path('classifiedads/', ads_views.ClassifiedAdListCreateView.as_view(),
          name='classifiedad-list-create'),
@@ -73,16 +82,6 @@ site_settings_urlpatterns = [
          name='banner-list-create'),
     path('banners/<int:pk>/',
          site_settings_views.BannerDetailView.as_view(), name='banner-detail'),
-
-    path('ad-type-attributes/', site_settings_views.AdTypeAttributeListCreateView.as_view(),
-         name='ad-type-attribute-list-create'),
-    path('ad-type-attributes/<int:pk>/',
-         site_settings_views.AdTypeAttributeDetailView.as_view(), name='ad-type-attribute-detail'),
-
-    path('ad-types/', site_settings_views.AdTypeListCreateView.as_view(),
-         name='ad-type-list-create'),
-    path('ad-types/<int:pk>/', site_settings_views.AdTypeDetailView.as_view(),
-         name='ad-type-detail'),
 ]
 
 urlpatterns = (classified_urlpatterns + likes_urlpatterns +

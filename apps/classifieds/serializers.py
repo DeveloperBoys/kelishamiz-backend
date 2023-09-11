@@ -16,36 +16,24 @@ class DynamicFieldSerializer(serializers.ModelSerializer):
 
 
 class ChildCategorySerializer(serializers.ModelSerializer):
-    iconUrl = serializers.SerializerMethodField()
+    iconUrl = serializers.URLField(source="icon_url")
 
     class Meta:
         model = Category
         fields = ('id', 'name', 'iconUrl')
 
-    def get_iconUrl(self, obj):
-        if obj.icon:
-            return obj.icon_url()
-        return None
-
 
 class CategorySerializer(serializers.ModelSerializer):
-    iconUrl = serializers.SerializerMethodField()
+    iconUrl = serializers.URLField(source="icon_url")
     childs = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
         fields = ('id', 'name', 'iconUrl', 'childs')
 
-    def get_iconUrl(self, obj):
-        if obj.icon:
-            return obj.icon_url()
-        return None
-
     def get_childs(self, obj):
         childs = obj.children.all()
-        if childs.exists():
-            return ChildCategorySerializer(childs, many=True).data
-        return None
+        return ChildCategorySerializer(childs, many=True).data if childs.exists() else None
 
 
 class ClassifiedDetailSerializer(serializers.ModelSerializer):
@@ -58,14 +46,11 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
 
 
 class ClassifiedImageSerializer(serializers.ModelSerializer):
-    imageUrl = serializers.SerializerMethodField()
+    imageUrl = serializers.URLField(source="image_url")
 
     class Meta:
         model = ClassifiedImage
         fields = ('imageUrl',)
-
-    def get_imageUrl(self, obj):
-        return obj.image.url if obj.image else None
 
 
 class ClassifiedListSerializer(serializers.ModelSerializer):

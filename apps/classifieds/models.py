@@ -31,17 +31,26 @@ class Category(Base):
     def __str__(self):
         return self.name
 
+    @property
     def icon_url(self):
         if self.icon:
-            return "%s%s" % (settings.HOST, self.icon.url)
+            return f"{settings.HOST}{self.icon.url}"
+        return None
 
 
-class DynamicField(models.Model):
+class DynamicField(Base):
     """
     DynamicField model for storing custom key-value attributes.
     """
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "Dynamic Field"
+        verbose_name_plural = "Dynamic Fields"
+
+    def __str__(self):
+        return f"key: {self.key} - value: {self.value}"
 
 
 class Classified(Base):
@@ -90,3 +99,12 @@ class ClassifiedImage(Base):
     class Meta:
         verbose_name = "Classified Image"
         verbose_name_plural = "Classified Images"
+
+    def __str__(self) -> str:
+        return self.classified.title
+
+    @property
+    def image_url(self):
+        if self.image:
+            return f"{settings.HOST}{self.image.url}"
+        return None

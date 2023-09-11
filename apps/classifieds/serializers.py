@@ -71,7 +71,7 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
     def get_imageUrl(self, obj):
         classified_image = ClassifiedImage.objects.filter(
             classified=obj).first()
-        return classified_image.image.url if classified_image else None
+        return classified_image.image_url if classified_image else None
 
 
 class ClassifiedSerializer(serializers.ModelSerializer):

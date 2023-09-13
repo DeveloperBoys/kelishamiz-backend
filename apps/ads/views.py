@@ -39,3 +39,4 @@ class ClassifiedAdRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
     queryset = ClassifiedAd.objects.all()
     serializer_class = ClassifiedAdSerializer
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']

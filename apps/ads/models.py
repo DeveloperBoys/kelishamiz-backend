@@ -1,7 +1,5 @@
 from django.db import models
 from django.utils import timezone
-from django.dispatch import receiver
-from django.db.models.signals import pre_save
 
 
 from apps.classifieds.models import Classified
@@ -45,9 +43,27 @@ class AdType(models.Model):
         return self.name
 
 
-class ClassifiedAd(models.Model):
+class TopClassified(models.Model):
     classified = models.OneToOneField(Classified, on_delete=models.CASCADE)
-    ad_type = models.OneToOneField(AdType, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Top Classified"
+        verbose_name_plural = "Top Classifieds"
+
+    def __str__(self):
+        return self.classified.title
+
+    def check_classified_activity(self):
+        self.is_active = self.classified.is_active
+        self.save()
+
+
+class ClassifiedAd(models.Model):
+    classified = models.OneToOneField(
+        Classified, related_name='ad', on_delete=models.CASCADE)
+    ad_type = models.OneToOneField(
+        AdType, related_name='ad', on_delete=models.CASCADE)
     is_active = models.BooleanField(default=False)
     started_date = models.DateTimeField(blank=True, null=True)
     ended_date = models.DateTimeField(blank=True, null=True)
@@ -61,7 +77,6 @@ class ClassifiedAd(models.Model):
             self.started_date = timezone.now()
 
         self.calculate_ended_date()
-        # self.calculate_is_active()
         super(ClassifiedAd, self).save(*args, **kwargs)
 
     def calculate_ended_date(self):
@@ -71,12 +86,3 @@ class ClassifiedAd(models.Model):
                 timezone.timedelta(days=validity_period)
         else:
             self.ended_date = None
-
-
-@receiver(pre_save, sender=ClassifiedAd)
-def calculate_ended_date_and_is_active(sender, instance, **kwargs):
-    now = timezone.now()
-    if instance.ended_date is not None:
-        instance.is_active = instance.started_date <= now <= instance.ended_date
-    else:
-        instance.is_active = False

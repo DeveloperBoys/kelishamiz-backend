@@ -1,8 +1,9 @@
 from rest_framework import generics, permissions
 
 from apps.permissions.permissions import IsAdminOrReadOnly
-from .models import ClassifiedAd, AdType, AdTypeAttribute
+from .models import ClassifiedAd, AdType, AdTypeAttribute, TopClassified
 from .serializers import ClassifiedAdSerializer, AdTypeSerializer, AdTypeAttributeSerializer
+from apps.classifieds.serializers import ClassifiedListSerializer
 
 
 class AdTypeAttributeListCreateView(generics.ListCreateAPIView):
@@ -40,3 +41,9 @@ class ClassifiedAdRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
     serializer_class = ClassifiedAdSerializer
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get']
+
+
+class TopClassifiedListView(generics.ListView):
+    queryset = TopClassified.objects.filter(is_active=True)
+    serializer_class = ClassifiedListSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

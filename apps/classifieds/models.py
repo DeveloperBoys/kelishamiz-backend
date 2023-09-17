@@ -81,7 +81,8 @@ class ClassifiedDetail(Base):
         max_length=3, choices=(("usd", "USD"), ("uzs", "UZS")))
     price = models.DecimalField(max_digits=12, decimal_places=2)
     description = models.TextField()
-    dynamicFields = models.ManyToManyField(DynamicField, blank=True)
+    dynamic_fields = models.ManyToManyField(
+        DynamicField, blank=True, related_name='classified_details')
 
     class Meta:
         verbose_name = "Classified Detail"

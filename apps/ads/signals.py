@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save
 
 
-from .models import ClassifiedAd
+from .models import ClassifiedAd, TopClassified
 from apps.classifieds.models import Classified
 
 
@@ -21,7 +21,9 @@ def update_top_classifieds(sender, instance, **kwargs):
     """
     Update related TopClassified objects when a Classified is saved.
     """
-    top_classified = instance.topclassified
+    try:
+        top_classified = instance.topclassified
+    except TopClassified.DoesNotExist:
+        top_classified = TopClassified(classified=instance)
 
-    if top_classified:
-        top_classified.check_classified_activity()
+    top_classified.check_classified_activity()

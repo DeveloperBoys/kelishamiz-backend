@@ -41,9 +41,3 @@ class ClassifiedAdRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
     serializer_class = ClassifiedAdSerializer
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get']
-
-
-class TopClassifiedListView(generics.ListView):
-    queryset = TopClassified.objects.filter(is_active=True)
-    serializer_class = ClassifiedListSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

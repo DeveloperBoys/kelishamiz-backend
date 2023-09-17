@@ -44,7 +44,8 @@ class AdType(models.Model):
 
 
 class TopClassified(models.Model):
-    classified = models.OneToOneField(Classified, on_delete=models.CASCADE)
+    classified = models.OneToOneField(
+        Classified, on_delete=models.CASCADE, related_name='topclassified')
     is_active = models.BooleanField(default=False)
 
     class Meta:

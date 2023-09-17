@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 
 from .models import (
@@ -24,12 +25,13 @@ class ChildCategorySerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    iconUrl = serializers.URLField(source="icon_url")
+    iconUrl = serializers.FileField(source="icon")
     childs = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
         fields = ('id', 'name', 'iconUrl', 'childs')
+        read_only_fields = ('icon_url',)
 
     def get_childs(self, obj):
         childs = obj.children.all()
@@ -37,8 +39,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ClassifiedDetailSerializer(serializers.ModelSerializer):
-    currencyType = serializers.CharField(source='currency_type')
-    dynamicFields = DynamicFieldSerializer(many=True)
+    currencyType = serializers.CharField(
+        source='currency_type', required=False)
+    dynamicFields = DynamicFieldSerializer(many=True, required=False)
 
     class Meta:
         model = ClassifiedDetail
@@ -46,7 +49,7 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
 
 
 class ClassifiedImageSerializer(serializers.ModelSerializer):
-    imageUrl = serializers.URLField(source="image_url")
+    imageUrl = serializers.FileField(source="image")
 
     class Meta:
         model = ClassifiedImage
@@ -75,38 +78,14 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
 
 
 class ClassifiedSerializer(serializers.ModelSerializer):
-    detail = ClassifiedDetailSerializer(
-        source='classifieddetail', read_only=True)
-    images = ClassifiedImageSerializer(
-        source='classifiedimage_set', many=True, read_only=True)
+    detail = ClassifiedDetailSerializer(source='classifieddetail')
+    images = ClassifiedImageSerializer(source='classifiedimage_set', many=True)
     category = serializers.CharField(source='category.name')
+    isLiked = serializers.BooleanField(source='is_liked')
     createdAt = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = Classified
         fields = ('title', 'category', 'detail',
-                  'images', 'is_liked', 'createdAt')
-
-
-class ClassifiedCreateSerializer(serializers.ModelSerializer):
-    detail = ClassifiedDetailSerializer()
-    images = serializers.ListField(child=serializers.ImageField())
-
-    class Meta:
-        model = Classified
-        fields = ('category', 'title', 'is_active',
-                  'detail', 'images', 'is_liked')
-
-    def create(self, validated_data):
-        detail_data = validated_data.pop('detail')
-        images_data = validated_data.pop('images')
-
-        classified_detail = ClassifiedDetail.objects.create(**detail_data)
-        classified = Classified.objects.create(
-            classifieddetail=classified_detail, **validated_data)
-
-        for image_data in images_data:
-            ClassifiedImage.objects.create(
-                classified=classified, image=image_data)
-
-        return classified
+                  'images', 'isLiked', 'createdAt')
+        read_only_fields = ('id', 'created_at')

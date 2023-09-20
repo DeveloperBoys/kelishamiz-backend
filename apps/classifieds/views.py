@@ -1,12 +1,10 @@
 import os
 import shutil
 from django.conf import settings
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.exceptions import ValidationError
-from rest_framework import generics, permissions, response, pagination, status
 
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_serializer_method, swagger_auto_schema
+from rest_framework.exceptions import ValidationError
+from rest_framework import generics, permissions, response, pagination
+
 
 from apps.ads.models import TopClassified
 from apps.permissions.permissions import ClassifiedOwnerOrReadOnly, IsAdminOrReadOnly
@@ -50,8 +48,8 @@ class ClassifiedCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         classified = serializer.save()
-        for image_data in serializer.validated_data.get('images', []):
 
+        for image_data in serializer.validated_data.get('images', []):
             image = self.handle_image(image_data, classified)
             image.save()
 
@@ -96,8 +94,10 @@ class CombinedClassifiedListView(generics.ListCreateAPIView):
             id__in=top_classified_ids).order_by('-created_at')
 
         # serialize with request context
-        top_serialized = ClassifiedListSerializer(
-            top_classifieds, many=True, context={'request': request})
+        top_serialized = None
+        if top_classifieds.exists():
+            top_serialized = ClassifiedListSerializer(
+                top_classifieds, many=True, context={'request': request})
 
         regular_serialized = ClassifiedListSerializer(
             regular_classifieds, many=True, context={'request': request})

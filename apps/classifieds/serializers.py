@@ -10,12 +10,6 @@ from .models import (
 )
 
 
-class DynamicFieldSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DynamicField
-        fields = ('key', 'value')
-
-
 class ChildCategorySerializer(serializers.ModelSerializer):
     iconUrl = serializers.URLField(source="icon_url")
 
@@ -36,6 +30,12 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_childs(self, obj):
         childs = obj.children.all()
         return ChildCategorySerializer(childs, many=True).data if childs.exists() else None
+
+
+class DynamicFieldSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DynamicField
+        fields = ('key', 'value')
 
 
 class ClassifiedDetailSerializer(serializers.ModelSerializer):

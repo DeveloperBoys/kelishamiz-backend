@@ -53,7 +53,8 @@ class ClassifiedImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClassifiedImage
-        fields = ('imageUrl',)
+        fields = ('id', 'classified', 'imageUrl',)
+        read_only_field = ('id',)
 
 
 class ClassifiedListSerializer(serializers.ModelSerializer):

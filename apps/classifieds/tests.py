@@ -8,7 +8,7 @@ from rest_framework.test import APIClient
 
 
 class ClassifiedCreateViewTestCase(TestCase):
-    def setUp(self):
+    def set_up(self):
         # Create a test user and an authenticated test client
         self.user = get_user_model().objects.create_user(
             username='testuser',

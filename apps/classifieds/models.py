@@ -95,7 +95,7 @@ class ClassifiedImage(Base):
     """
     classified = models.ForeignKey(Classified, related_name='classifiedimage_set',
                                    on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='classifieds/classified/images/')
+    image = models.ImageField(upload_to='classifieds/images/')
 
     class Meta:
         verbose_name = "Classified Image"
@@ -104,8 +104,8 @@ class ClassifiedImage(Base):
     def __str__(self) -> str:
         return self.classified.title
 
-    @property
-    def image_url(self):
-        if self.image:
-            return f"{settings.HOST}{self.image.url}"
-        return None
+    # @property
+    # def image_url(self):
+    #     if self.image:
+    #         return f"{settings.HOST}{self.image.url}"
+    #     return None

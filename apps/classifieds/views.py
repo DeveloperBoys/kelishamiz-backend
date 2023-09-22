@@ -23,6 +23,12 @@ class CategoryListView(generics.ListCreateAPIView):
     permission_classes = (IsAdminOrReadOnly, )
 
 
+class ImageView(generics.ListCreateAPIView):
+    queryset = ClassifiedImage.objects.all()
+    serializer_class = ClassifiedImageSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+
+
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer

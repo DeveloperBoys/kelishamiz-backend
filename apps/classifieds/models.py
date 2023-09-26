@@ -104,8 +104,8 @@ class ClassifiedImage(Base):
     def __str__(self) -> str:
         return self.classified.title
 
-    # @property
-    # def image_url(self):
-    #     if self.image:
-    #         return f"{settings.HOST}{self.image.url}"
-    #     return None
+    @property
+    def image_url(self):
+        if self.image:
+            return f"{settings.HOST}{self.image.url}"
+        return None

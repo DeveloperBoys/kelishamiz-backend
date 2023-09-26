@@ -65,7 +65,9 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classified
-        fields = ('title', 'imageUrl', 'price', 'isLiked', 'createdAt')
+        fields = ('category', 'owner', 'title', 'imageUrl',
+                  'price', 'isLiked', 'createdAt')
+        read_only_fields = ('imageUrl', 'price')
 
     def get_price(self, obj):
         classified_detail = ClassifiedDetail.objects.filter(

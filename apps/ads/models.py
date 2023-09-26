@@ -73,6 +73,9 @@ class ClassifiedAd(models.Model):
         verbose_name = "Classified Ad"
         verbose_name_plural = "Classified Ads"
 
+    def __str__(self) -> str:
+        return self.classified.title
+
     def save(self, *args, **kwargs):
         if not self.started_date:
             self.started_date = timezone.now()

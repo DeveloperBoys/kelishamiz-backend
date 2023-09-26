@@ -14,13 +14,11 @@ classified_urlpatterns = [
 
     # Classified URLs
     path('images/', classified_viws.ImageView.as_view(),
-         name='classified-list'),
+         name='classified-images'),
     path('classifieds/', classified_viws.CombinedClassifiedListView.as_view(),
          name='classified-list'),
     path('classifieds/<int:pk>/', classified_viws.ClassifiedDetailView.as_view(),
          name='classified-detail'),
-    path('classifieds/create/', classified_viws.ClassifiedCreateView.as_view(),
-         name='classified-create'),
 ]
 
 likes_urlpatterns = [

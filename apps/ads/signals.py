@@ -16,14 +16,21 @@ def calculate_ended_date_and_is_active(sender, instance, **kwargs):
         instance.is_active = False
 
 
-@receiver(post_save, sender=Classified)
-def update_top_classifieds(sender, instance, **kwargs):
+@receiver(post_save, sender=ClassifiedAd)
+def update_top_classifieds(sender, instance, created, **kwargs):
     """
-    Update related TopClassified objects when a Classified is saved.
+    Update related TopClassified objects when a ClassifiedAd is saved and is_active=True.
     """
-    try:
-        top_classified = instance.topclassified
-    except TopClassified.DoesNotExist:
-        top_classified = TopClassified(classified=instance)
+    if not created:
+        try:
+            top_classified = instance.classified.topclassified
+        except TopClassified.DoesNotExist:
+            top_classified = TopClassified(classified=instance.classified)
+            top_classified.save()
 
-    top_classified.check_classified_activity()
+        if instance.is_active:
+            top_classified.is_active = True
+        else:
+            top_classified.is_active = False
+
+        top_classified.save()

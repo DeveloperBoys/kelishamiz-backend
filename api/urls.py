@@ -15,7 +15,7 @@ classified_urlpatterns = [
     # Classified URLs
     path('images/', classified_viws.ImageView.as_view(),
          name='classified-images'),
-    path('classifieds/', classified_viws.CombinedClassifiedListView.as_view(),
+    path('classifieds/', classified_viws.ClassifiedListView.as_view(),
          name='classified-list'),
     path('classifieds/<int:pk>/', classified_viws.ClassifiedDetailView.as_view(),
          name='classified-detail'),

@@ -22,7 +22,6 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
-    'apps.ads.apps.AdsConfig',
     'apps.likes.apps.LikesConfig',
     'apps.users.apps.UsersConfig',
     'apps.classifieds.apps.ClassifiedsConfig',
@@ -32,6 +31,7 @@ LOCAL_APPS = [
 THIRD_PARTY_APPS = [
     'drf_yasg',
     'rest_framework',
+    'django_filters',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -80,6 +80,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
 }

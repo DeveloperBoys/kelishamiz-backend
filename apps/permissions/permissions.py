@@ -16,7 +16,7 @@ class ClassifiedOwner(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
+        return obj.owner == request.user
 
 
 class ClassifiedOwnerOrReadOnly(permissions.BasePermission):
@@ -39,7 +39,7 @@ class ClassifiedOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Check if the user is the owner of the classified object for other methods.
-        return obj.user == request.user
+        return obj.owner == request.user
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):

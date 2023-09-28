@@ -1,13 +1,14 @@
 from rest_framework import permissions
 
 
-# class AdminOnlyPermission(permissions.BasePermission):
-#     def has_permission(self, request, view):
-#         # Allow GET requests for all users
-#         if request.method == 'GET':
-#             return True
-#         # Allow other requests only for admin users
-#         return request.user and request.user.is_staff
+class ClassifiedPermission(permissions.BasePermission):
+
+  def has_object_permission(self, request, view, obj):
+    
+    if request.method == 'DELETE':
+      return obj.can_delete()
+
+    return obj.can_edit()
 
 
 class ClassifiedOwner(permissions.BasePermission):

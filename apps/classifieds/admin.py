@@ -30,8 +30,8 @@ class DynamicFieldAdmin(admin.ModelAdmin):
 
 @admin.register(Classified)
 class ClassifiedAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'is_active',)
-    list_filter = ('category', 'is_active',)
+    list_display = ('title', 'category', 'status',)
+    list_filter = ('category', 'status',)
     search_fields = ('title', 'category__name',)
 
     inlines = [ClassifiedDetailInline, ClassifiedImageInline]

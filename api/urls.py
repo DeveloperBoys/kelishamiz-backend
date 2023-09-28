@@ -1,24 +1,28 @@
 from django.urls import path
 
-from apps.classifieds import views as classified_viws
+from apps.classifieds import views as classified_views
 from apps.likes import views as likes_views
 from apps.users import views as user_views
 from apps.site_settings import views as site_settings_views
 
 classified_urlpatterns = [
     # Category URLs
-    path('categories/', classified_viws.CategoryListView.as_view(),
+    path('categories/', classified_views.CategoryListView.as_view(),
          name='category-list'),
-    path('categories/<int:pk>/', classified_viws.CategoryDetailView.as_view(),
+    path('categories/<int:pk>/', classified_views.CategoryDetailView.as_view(),
          name='category-detail'),
 
     # Classified URLs
-    path('images/', classified_viws.ImageView.as_view(),
-         name='classified-images'),
-    path('classifieds/', classified_viws.ClassifiedListView.as_view(),
+    path('classifieds/', classified_views.ClassifiedListView.as_view(),
          name='classified-list'),
-    path('classifieds/<int:pk>/', classified_viws.ClassifiedDetailView.as_view(),
+    path('classifieds/<int:pk>/', classified_views.ClassifiedDetailView.as_view(),
          name='classified-detail'),
+    path('classifieds/create/', classified_views.CreateClassifiedView.as_view(),
+         name='create-classified'),
+    path('classifieds/create/images/', classified_views.CreateClassifiedImageView.as_view(),
+         name='create-classified-images'),
+    path('classifieds/create/details/', classified_views.CreateClassifiedDetailView.as_view(),
+         name='create-classified-details'),
 ]
 
 likes_urlpatterns = [

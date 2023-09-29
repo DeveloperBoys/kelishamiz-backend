@@ -6,8 +6,8 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-DRAFT, PENDING, APPROVED, REJECTED = (
-    "draft", "pending", "approved", "rejected"
+DRAFT, PENDING, APPROVED, REJECTED, DELETED = (
+    "draft", "pending", "approved", "rejected", "deleted"
 )
 
 
@@ -66,7 +66,8 @@ class Classified(Base):
         (DRAFT, DRAFT),
         (PENDING, PENDING),
         (APPROVED, APPROVED),
-        (REJECTED, REJECTED)
+        (REJECTED, REJECTED),
+        (DELETED, DELETED)
     )
     
     category = models.ForeignKey(Category, on_delete=models.CASCADE)

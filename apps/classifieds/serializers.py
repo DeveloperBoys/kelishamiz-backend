@@ -7,51 +7,91 @@ from .models import (
     ClassifiedImage,
     ClassifiedDetail,
     PENDING,
-    DRAFT
+    DRAFT,
+    DELETED
 )
 
 
 class ChildCategorySerializer(serializers.ModelSerializer):
-    iconUrl = serializers.URLField(source="icon_url")
+    iconUrl = serializers.CharField(source="icon_url")
 
     class Meta:
         model = Category
         fields = ('id', 'name', 'iconUrl')
+        read_only_fields = ('id', 'iconUrl')
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    iconUrl = serializers.URLField(source="icon_url")
+    iconUrl = serializers.CharField(source="icon_url", read_only=True)
     childs = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
-        fields = ('id', 'name', 'icon', 'iconUrl', 'childs')
-        read_only_fields = ('iconUrl',)
+        fields = ('id', 'name', 'parent', 'icon', 'iconUrl', 'childs')
+        read_only_fields = ('id',)
 
     def get_childs(self, obj):
         childs = obj.children.all()
         return ChildCategorySerializer(childs, many=True).data if childs.exists() else None
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request and request.method == 'GET':
+            data.pop('icon', None)
+            data.pop('parent', None)
+        
+        return data
+
 
 class DynamicFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = DynamicField
-        fields = ('key', 'value')
-        
+        fields = ('id', 'key', 'value')
+        read_only_fields = ('id', )
         
         
 class ClassifiedImageSerializer(serializers.ModelSerializer):
-    imageUrl = serializers.URLField(source="image_url")
+    imageUrl = serializers.URLField(source="image_url", read_only=True)
 
     class Meta:
         model = ClassifiedImage
         fields = ('id', 'classified', 'image', 'imageUrl',)
-        read_only_field = ('id', 'imageUrl')
+        read_only_fields = ('id', )
+        
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        # Check if the request method is GET
+        if request and request.method == 'GET':
+            # Remove 'image' field for GET requests
+            data.pop('image', None)
+        
+        return data
+    
+    def validate(self, data):
+        if not self.instance:
+            classified = data['classified']
+            if classified.status != DRAFT:
+                raise serializers.ValidationError('Classified image must be in draft status')
+
+        return data
+    
+    def create(self, validated_data):
+        # Create a new image instance
+        return ClassifiedImage.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        # Update an existing image instance
+        instance.image = validated_data.get('image', instance.image)
+        instance.save()
+        return instance
 
 
 class ClassifiedDetailSerializer(serializers.ModelSerializer):
-    currencyType = serializers.CharField(
-        source='currency_type', required=False)
+    currencyType = serializers.CharField(source='currency_type')
     dynamicFields = serializers.SerializerMethodField(source='dynamic_fields')
     images = serializers.SerializerMethodField()
 
@@ -68,21 +108,22 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
     def get_images(self, obj):
         images = ClassifiedImage.objects.filter(classified=obj.classified)
         if images.exists():
-            return ClassifiedImageSerializer(images, many=True).data
+            request = self.context.get('request')
+            return ClassifiedImageSerializer(images, many=True, context={'request': request}).data
         return None
 
 
 class ClassifiedListSerializer(serializers.ModelSerializer):
-    price = serializers.SerializerMethodField()
-    imageUrl = serializers.SerializerMethodField()
-    createdAt = serializers.DateTimeField(source='created_at')
+    price = serializers.SerializerMethodField(read_only=True)
+    imageUrl = serializers.SerializerMethodField(read_only=True)
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     isLiked = serializers.BooleanField(source='is_liked')
 
     class Meta:
         model = Classified
         fields = ('id', 'category', 'owner', 'title', 'imageUrl',
                   'price', 'isLiked', 'createdAt')
-        read_only_fields = ('id', 'imageUrl', 'price')
+        read_only_fields = ('id',)
 
     def get_price(self, obj):
         classified_detail = ClassifiedDetail.objects.filter(
@@ -97,22 +138,27 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
 
 class ClassifiedSerializer(serializers.ModelSerializer):
     detail = ClassifiedDetailSerializer(source='classifieddetail')
-    category = serializers.CharField(source='category.name')
     isLiked = serializers.BooleanField(source='is_liked')
-    createdAt = serializers.DateTimeField(source='created_at')
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+    category = serializers.SerializerMethodField()
 
     class Meta:
         model = Classified
         fields = ('id', 'title', 'category', 'detail', 'isLiked', 'createdAt')
-        read_only_fields = ('id', 'createdAt')
+        read_only_fields = ('id',)
         
+    def get_category(self, obj):
+        request = self.context.get('request')
+        if request and request.method == 'GET':
+            return obj.category.name
+        return obj.category.pk
+
     
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.category.pk = validated_data.get('category', instance.category.pk)
         instance.save()
         
-        # If you need to update related fields (e.g., detail), you can do so here.
         detail_data = validated_data.get('classifieddetail', {})
         detail_serializer = ClassifiedDetailSerializer(
             instance=instance.classifieddetail, data=detail_data, partial=True
@@ -120,6 +166,18 @@ class ClassifiedSerializer(serializers.ModelSerializer):
         if detail_serializer.is_valid():
             detail_serializer.save()
 
+        return instance
+    
+    
+class DeleteClassifiedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Classified
+        fields = ('id',)  # Only include the 'id' field to identify the classified
+
+    def update(self, instance, validated_data):
+        # Change the status of the classified to 'DELETE'
+        instance.status = DELETED
+        instance.save()
         return instance
         
         
@@ -136,26 +194,29 @@ class CreateClassifiedSerializer(serializers.ModelSerializer):
             **validated_data
         )
         return classified
-
-class CreateClassifiedImageSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model = ClassifiedImage
-        fields = ('classified', 'image')
-        
-    def validate(self, data):
-        if self.instance.classified.status != DRAFT:
-            raise serializers.ValidationError("Cannot add images to a classified that is not in draft status")
-        return data
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.category.pk = validated_data.get('category', instance.category.pk)
+        instance.save()
+        return instance
+
 
 class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
-
     dynamicFields = DynamicFieldSerializer(many=True)
 
     class Meta:
         model = ClassifiedDetail
         fields = ('classified', 'currency_type', 'price', 
                   'is_negotiable', 'description', 'dynamicFields')
+        
+    def validate(self, data):
+        if not self.instance:
+            classified = data['classified']
+            if classified.status != DRAFT:
+                raise serializers.ValidationError("Classified detail must be in draft status")
+        
+        return data
 
     def create(self, validated_data):
         dynamic_fields = validated_data.pop('dynamicFields')
@@ -169,3 +230,27 @@ class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
         classified.status = PENDING
         classified.save()
         return classified_detail
+
+    def update(self, instance, validated_data):
+        instance.currency_type = validated_data.get('currency_type', instance.currency_type)  
+        instance.price = validated_data.get('price', instance.price)
+        instance.description = validated_data.get('description', instance.description)
+
+        # Update dynamic fields
+        new_dynamic_fields = validated_data.get('dynamicFields')
+        if new_dynamic_fields:
+            for dynamic_field_data in new_dynamic_fields:
+                dynamic_field, created = DynamicField.objects.get_or_create(
+                    classified_detail=instance,
+                    key=dynamic_field_data['key'],  # Assuming 'key' is unique
+                    defaults={'value': dynamic_field_data['value']}
+                )
+                if not created:
+                    dynamic_field.value = dynamic_field_data['value']
+                    dynamic_field.save()
+
+        instance.classified.status = PENDING
+        instance.classified.save()
+
+        instance.save()
+        return instance

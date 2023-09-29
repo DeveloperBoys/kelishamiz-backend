@@ -4,7 +4,7 @@ from rest_framework import generics, permissions
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.permissions.permissions import ClassifiedOwnerOrReadOnly, ClassifiedOwner, IsAdminOrReadOnly, ClassifiedPermission
+from apps.permissions.permissions import PublishedClassifiedPermission, ClassifiedOwner, IsAdminOrReadOnly, DraftClassifiedPermission
 from .models import Category, Classified, ClassifiedImage, APPROVED
 from .filters import ClassifiedFilter
 from .serializers import (
@@ -13,7 +13,7 @@ from .serializers import (
     ClassifiedSerializer,
     ClassifiedImageSerializer,
     CreateClassifiedSerializer,
-    CreateClassifiedImageSerializer,
+    DeleteClassifiedSerializer,
     CreateClassifiedDetailSerializer
 )
 
@@ -42,7 +42,7 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAdminOrReadOnly, )
 
 
-class ClassifiedListView(generics.ListCreateAPIView):
+class ClassifiedListView(generics.ListAPIView):
     queryset = Classified.objects.filter(status=APPROVED).order_by('-created_at')
     serializer_class = ClassifiedListSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
@@ -50,22 +50,18 @@ class ClassifiedListView(generics.ListCreateAPIView):
     search_fields = ['title']
     filterset_class = ClassifiedFilter
     pagination_class = ClassifiedPagination
-    http_method_names = ['get', ]
 
 
-class ClassifiedDetailView(generics.RetrieveUpdateDestroyAPIView):
+class ClassifiedDetailView(generics.ListAPIView):
     queryset = Classified.objects.filter(status=APPROVED)
     serializer_class = ClassifiedSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, ClassifiedOwnerOrReadOnly, ]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, ]
     
-    # def get_queryset(self):
-    #     # Check if the request method is GET and the user is authenticated.
-    #     if self.request.method == 'GET' and self.request.user.is_authenticated:
-    #         # Return approved classifieds for GET requests from authenticated users.
-    #         return Classified.objects.filter(status=APPROVED)
-        
-    #     # For other methods (e.g., PUT, DELETE) or unauthenticated users, return all classifieds.
-    #     return Classified.objects.all()
+    
+class DeleteClassifiedView(generics.UpdateAPIView):
+    queryset = Classified.objects.all()
+    serializer_class = DeleteClassifiedSerializer
+    permission_classes = [permissions.IsAuthenticated, ClassifiedOwner, permissions.IsAdminUser]
 
 
 class CreateClassifiedView(generics.CreateAPIView):
@@ -74,10 +70,26 @@ class CreateClassifiedView(generics.CreateAPIView):
 
 
 class CreateClassifiedImageView(generics.CreateAPIView):
-    serializer_class = CreateClassifiedImageSerializer
-    permission_classes = [ClassifiedOwner, ClassifiedPermission]
+    serializer_class = ClassifiedImageSerializer
+    permission_classes = [permissions.IsAuthenticated, ClassifiedOwner, DraftClassifiedPermission]
 
 
 class CreateClassifiedDetailView(generics.CreateAPIView):
     serializer_class = CreateClassifiedDetailSerializer
-    permission_classes = [ClassifiedOwner, ClassifiedPermission]
+    permission_classes = [permissions.IsAuthenticated, ClassifiedOwner, DraftClassifiedPermission]
+
+
+class EditClassifiedView(generics.UpdateAPIView):
+    serializer_class = CreateClassifiedSerializer
+    permission_classes = [permissions.IsAuthenticated, ClassifiedOwner, PublishedClassifiedPermission]
+
+
+class EditClassifiedImageView(generics.UpdateAPIView):
+    serializer_class = ClassifiedImageSerializer
+    permission_classes = [permissions.IsAuthenticated, ClassifiedOwner, PublishedClassifiedPermission]
+    
+
+class EditClassifiedDetailView(generics.UpdateAPIView):
+    serializer_class = CreateClassifiedDetailSerializer
+    permission_classes = [permissions.IsAuthenticated, ClassifiedOwner, PublishedClassifiedPermission]
+    

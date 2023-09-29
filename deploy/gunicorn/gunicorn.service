@@ -11,7 +11,7 @@ ExecStart=/root/kelishamiz-backend/venv/bin/gunicorn \
           --access-logfile - \
           --workers 3 \
           --bind unix:/run/gunicorn.sock \
-          configs.wsgi:application
+          config.wsgi:application
 
 [Install]
 WantedBy=multi-user.target

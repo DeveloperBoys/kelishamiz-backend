@@ -1,14 +1,18 @@
 from rest_framework import permissions
 
+from apps.classifieds.models import DRAFT
 
-class ClassifiedPermission(permissions.BasePermission):
+
+class DraftClassifiedPermission(permissions.BasePermission):
 
   def has_object_permission(self, request, view, obj):
-    
-    if request.method == 'DELETE':
-      return obj.can_delete()
+    return request.method in ['GET', 'POST', 'DELETE'] and obj.status == DRAFT
 
-    return obj.can_edit()
+
+class PublishedClassifiedPermission(permissions.BasePermission):
+
+  def has_object_permission(self, request, view, obj):
+    return request.method in ['GET', 'PUT', 'PATCH', 'DELETE'] and obj.status != DRAFT
 
 
 class ClassifiedOwner(permissions.BasePermission):

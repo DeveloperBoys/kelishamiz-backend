@@ -17,12 +17,13 @@ classified_urlpatterns = [
          name='classified-list'),
     path('classifieds/<int:pk>/', classified_views.ClassifiedDetailView.as_view(),
          name='classified-detail'),
-    path('classifieds/create/', classified_views.CreateClassifiedView.as_view(),
-         name='create-classified'),
-    path('classifieds/create/images/', classified_views.CreateClassifiedImageView.as_view(),
-         name='create-classified-images'),
-    path('classifieds/create/details/', classified_views.CreateClassifiedDetailView.as_view(),
-         name='create-classified-details'),
+    path('classifieds/<int:pk>/delete/', classified_views.DeleteClassifiedView.as_view(), name='delete-classified'),
+    path('classifieds/create/', classified_views.CreateClassifiedView.as_view(), name='create-classified'),
+    path('classifieds/<int:pk>/images/create/', classified_views.CreateClassifiedImageView.as_view(), name='create-classified-image'),
+    path('classifieds/<int:pk>/details/create/', classified_views.CreateClassifiedDetailView.as_view(), name='create-classified-detail'),
+    path('classifieds/<int:pk>/edit/', classified_views.EditClassifiedView.as_view(), name='edit-classified'),
+    path('classifieds/<int:pk>/images/edit/', classified_views.EditClassifiedImageView.as_view(), name='edit-classified-image'),
+    path('classifieds/<int:pk>/details/edit/', classified_views.EditClassifiedDetailView.as_view(), name='edit-classified-detail'),
 ]
 
 likes_urlpatterns = [

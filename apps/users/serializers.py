@@ -44,7 +44,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             self.username_field: username,
             'password': attrs['password']
         }
-        print(authentication_kwargs)
         current_user = User.objects.filter(username__iexact=username).first()
         if current_user.auth_status != DONE:
             raise ValidationError(
@@ -112,12 +111,6 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = super(SignUpSerializer, self).create(validated_data)
-        print(user)
-        # if user.auth_type == VIA_SOCIAL:
-        #     code = user.create_verify_code(user.auth_type)
-        #     print(code)
-        #     send_email(user.email, code)
-        #     print("email sending..")
         if user.auth_type == VIA_PHONE:
             code = user.create_verify_code(user.auth_type)
             send_email(user.email, code)
@@ -133,13 +126,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     @staticmethod
     def auth_validate(attrs):
         user_input = str(attrs.get('phone_number')).lower()
-        print(user_input)
         input_type = check_phone(user_input)
-        # if input_type == "email":
-        #     data = {
-        #         "email": attrs.get('email_phone_number'),
-        #         'auth_type': VIA_EMAIL
-        #     }
         if input_type == "phone":
             data = {
                 "phone_number": attrs.get('phone_number'),
@@ -168,15 +155,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         )
         print(query)
         if User.objects.filter(query).exists():
-            print('topildi')
             User.objects.get(query).delete()
-
-        # if value and User.objects.filter(email=value).exists():
-        #     data = {
-        #         "success": False,
-        #         "message": "This Email address is already being used!"
-        #     }
-        #     raise ValidationError(data)
 
         if value and User.objects.filter(phone_number=value).exists():
             data = {
@@ -226,7 +205,6 @@ class ChangeUserInformationSerializer(serializers.Serializer):
         return username
 
     def validate(self, data):
-        print(data)
         password = data.get('password')
         confirm_password = data.get('confirm_password')
         if password:

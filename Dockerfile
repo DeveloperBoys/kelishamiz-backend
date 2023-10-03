@@ -1,18 +1,15 @@
-FROM python:3.10
+FROM python:3.10-alpine
 
-ENV PYTHONUNBUFFERED 1
+RUN pip install --upgrade pip
 
-# Set the working directory to /code/
-WORKDIR /code/
-
-# Copy the project files from the build context into the container at /code/
-COPY . /code/
-
-# Install Poetry
+COPY ./poetry.lock ./pyproject.toml ./
 RUN pip install poetry
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
 
-# Install project dependencies using Poetry
-RUN poetry install --no-interaction --no-ansi
+COPY . /app
 
-# Expose port
-EXPOSE 8000
+WORKDIR /app
+
+COPY ./entrypoint.sh ./
+ENTRYPOINT [ "sh", "/entrypoint.sh"]

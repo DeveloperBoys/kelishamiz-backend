@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.classifieds import views as classified_views
+from apps.user_searches import views as search_views
 from apps.likes import views as likes_views
 from apps.users import views as user_views
 from apps.site_settings import views as site_settings_views
@@ -17,13 +18,21 @@ classified_urlpatterns = [
          name='classified-list'),
     path('classifieds/<int:pk>/', classified_views.ClassifiedDetailView.as_view(),
          name='classified-detail'),
-    path('classifieds/<int:pk>/delete/', classified_views.DeleteClassifiedView.as_view(), name='delete-classified'),
-    path('classifieds/create/', classified_views.CreateClassifiedView.as_view(), name='create-classified'),
-    path('classifieds/<int:pk>/images/create/', classified_views.CreateClassifiedImageView.as_view(), name='create-classified-image'),
-    path('classifieds/<int:pk>/details/create/', classified_views.CreateClassifiedDetailView.as_view(), name='create-classified-detail'),
-    path('classifieds/<int:pk>/edit/', classified_views.EditClassifiedView.as_view(), name='edit-classified'),
-    path('classifieds/<int:pk>/images/edit/', classified_views.EditClassifiedImageView.as_view(), name='edit-classified-image'),
-    path('classifieds/<int:pk>/details/edit/', classified_views.EditClassifiedDetailView.as_view(), name='edit-classified-detail'),
+    path('classifieds/<int:pk>/delete/',
+         classified_views.DeleteClassifiedView.as_view(), name='delete-classified'),
+    path('classifieds/create/', classified_views.CreateClassifiedView.as_view(),
+         name='create-classified'),
+    path('classifieds/<int:pk>/images/create/',
+         classified_views.CreateClassifiedImageView.as_view(), name='create-classified-image'),
+    path('classifieds/<int:pk>/details/create/',
+         classified_views.CreateClassifiedDetailView.as_view(), name='create-classified-detail'),
+    path('classifieds/<int:pk>/edit/',
+         classified_views.EditClassifiedView.as_view(), name='edit-classified'),
+    path('classifieds/<int:pk>/images/edit/',
+         classified_views.EditClassifiedImageView.as_view(), name='edit-classified-image'),
+    path('classifieds/<int:pk>/details/edit/',
+         classified_views.EditClassifiedDetailView.as_view(), name='edit-classified-detail'),
+    #     path('search/', search_views.SearchView.as_view(), name='search'),
 ]
 
 likes_urlpatterns = [
@@ -36,16 +45,16 @@ likes_urlpatterns = [
 
 
 user_urlpatterns = [
-    path('login/', user_views.LoginView.as_view(), name='login'),
+    path('admin/login/', user_views.AdminLoginView.as_view(), name='admin-login'),
+    path('user/login/', user_views.UserLoginView.as_view(), name='user-login'),
+    path('login/verify/', user_views.VerifyApiView.as_view(),
+         name='phone_number_verify'),
     path('login/refresh/', user_views.CustomTokenRefreshView.as_view(),
-         name="token_refresh"),
-    path('logout/', user_views.LogoutView.as_view(), name="logout"),
-    path("signup/", user_views.CreateUserView.as_view(), name='signup'),
-    path("verify/", user_views.VerifyApiView.as_view(), name='verify_code'),
-    path('new-verify/', user_views.GetNewVerification.as_view(),
-         name='new_verify_code'),
-    path('change-user-information/', user_views.ChangeUserView.as_view(),
-         name='change_user_information')
+         name='token_refresh'),
+    path('logout/', user_views.LogoutView.as_view(), name='logout'),
+    path('user/data/', user_views.UserDataView.as_view(), name='user_data'),
+    path('user/change-information/', user_views.ChangeUserInformationView.as_view(),
+         name='change_user_information'),
 ]
 
 site_settings_urlpatterns = [

@@ -25,6 +25,8 @@ def check_user_type(user_input):
         user_input = "phone"
     elif re.fullmatch(username_regex, user_input):
         user_input = "username"
+    elif re.fullmatch(email_regex, user_input):
+        user_input = "email"
     else:
         data = {
             "success": False,

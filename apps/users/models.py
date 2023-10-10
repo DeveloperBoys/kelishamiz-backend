@@ -5,41 +5,64 @@ from datetime import datetime, timedelta
 from django.db import models
 from django.conf import settings
 from django.core.validators import RegexValidator
-from django.contrib.auth.models import AbstractUser, UserManager
+from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import BaseUserManager
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
+# from .managers import UserManager
+from .constants import VIA_PHONE, VIA_SOCIAL, ORDINARY_USER, MANAGER, SUPER_USER
 
-VIA_PHONE, VIA_SOCIAL = (
-    "via_phone",
-    "via_social"
-)
-
-NEW, CODE_VERIFIED, DONE = (
-    "NEW",
-    "CODE_VERIFIED",
-    "DONE"
-)
 
 PHONE_EXPIRE = 2
 
 
-class UserManagerWithRandomUsername(UserManager):
+class UserManager(BaseUserManager):
     """
-    Custom user manager that generates random usernames if not provided.
+    Custom user manager for User model.
     """
 
-    def create_user(self, username=None, email=None, password=None, **extra_fields):
-        if not username:
-            username = self.generate_random_username()
-        return super().create_user(username, email, password, **extra_fields)
+    def create_user(self, phone_number, password=None, user_roles=ORDINARY_USER, **extra_fields):
+        """Create and save a regular User with the given phone number and password."""
+        if not phone_number:
+            raise ValueError(_('The phone number must be set.'))
+
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(phone_number, password, user_roles, **extra_fields)
+
+    def create_superuser(self, phone_number, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('user_roles', SUPER_USER)
+        return self._create_user(phone_number, password, **extra_fields)
+
+    def _create_user(self, phone_number, password, user_roles, **extra_fields):
+        if not phone_number:
+            raise ValueError(_('The phone number must be set.'))
+
+        user = self.model(phone_number=phone_number,
+                          user_roles=user_roles, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
     @staticmethod
     def generate_random_username():
-        temp_username = f"SurxonBazar-{uuid.uuid4().hex[:8]}"
+        temp_username = f"kelishamiz-{uuid.uuid4().hex[:8]}"
         while User.objects.filter(username=temp_username).exists():
             temp_username += str(random.randint(0, 9))
         return temp_username
+
+
+class BaseModel(models.Model):
+    guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    created_time = models.DateTimeField(auto_now_add=True)
+    updated_time = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
 
 
 class UserConfirmation(models.Model):
@@ -70,44 +93,50 @@ class UserConfirmation(models.Model):
         super(UserConfirmation, self).save(*args, **kwargs)
 
 
-class User(AbstractUser):
+class User(AbstractUser, BaseModel):
     """
     Custom user model with extended fields and methods.
     """
     _validate_phone = RegexValidator(
         regex=r"^\+998([378]{2}|(9[013-57-9]))\d{7}$",
-        message="Your phone number must be connected with 9 and 12 characters! For example: 998998887766"
-    )
-    AUTH_STATUS = (
-        (NEW, NEW),
-        (CODE_VERIFIED, CODE_VERIFIED),
-        (DONE, DONE)
+        message="Your phone number must be connected with +9 and 12 characters! For example: 998998887766"
     )
     AUTH_TYPE_CHOICES = (
         (VIA_PHONE, VIA_PHONE),
         (VIA_SOCIAL, VIA_SOCIAL)
     )
+    USER_ROLES = (
+        (ORDINARY_USER, ORDINARY_USER),
+        (MANAGER, MANAGER),
+        (SUPER_USER, SUPER_USER)
+    )
 
-    guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    user_roles = models.CharField(
+        max_length=31, choices=USER_ROLES, default=ORDINARY_USER
+    )
     auth_type = models.CharField(
         max_length=31, choices=AUTH_TYPE_CHOICES)
-    auth_status = models.CharField(
-        max_length=31, choices=AUTH_STATUS, default=NEW)
     profile_image = models.FileField(
         upload_to='uploads/user', blank=True, null=True
+    )
+    father_name = models.CharField(
+        _("father name"), max_length=150, blank=True
     )
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(
         max_length=13, unique=True, validators=[_validate_phone])
     birth_date = models.DateField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    objects = UserManagerWithRandomUsername()
+    EMAIL_FIELD = "email"
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["phone_number"]
+
+    objects = UserManager()
 
     class Meta:
-        verbose_name = 'User'
-        verbose_name_plural = 'Users'
+        db_table = "users"
+        verbose_name = "User"
+        verbose_name_plural = "Users"
 
     @property
     def profile_image_url(self):

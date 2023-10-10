@@ -69,10 +69,11 @@ class Classified(Base):
         (REJECTED, REJECTED),
         (DELETED, DELETED)
     )
-    
+
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    status = models.CharField(max_length=8, choices=CLASSIFIED_STATUS, default=DRAFT)
+    status = models.CharField(
+        max_length=8, choices=CLASSIFIED_STATUS, default=DRAFT)
     title = models.CharField(max_length=150)
     is_liked = models.BooleanField(default=False)
 
@@ -82,7 +83,7 @@ class Classified(Base):
 
     def __str__(self) -> str:
         return self.title
-    
+
     def can_edit(self):
         return self.status == DRAFT
 

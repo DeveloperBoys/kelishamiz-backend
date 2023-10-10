@@ -20,7 +20,8 @@ class GetClassifiedLikeView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return ClassifiedLike.objects.filter(user=self.request.user, is_active=True)
+        user = self.request.user
+        return ClassifiedLike.objects.filter(user=user, is_active=True)
 
 
 class DeleteClassifiedLikeView(generics.DestroyAPIView):

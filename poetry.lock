@@ -306,6 +306,20 @@ requests-oauthlib = ">=0.3.0"
 saml = ["python3-saml (>=1.15.0,<2.0.0)"]
 
 [[package]]
+name = "django-cors-headers"
+version = "4.3.0"
+description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "django_cors_headers-4.3.0-py3-none-any.whl", hash = "sha256:bd36c7aea0d070e462f3383f0dc9ef717e5fdc2b10a99c98c285f16da84ffba2"},
+    {file = "django_cors_headers-4.3.0.tar.gz", hash = "sha256:25aabc94d4837678c1edf442c7f68a5f5fd151f6767b0e0b01c61a2179d02711"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
 name = "django-filter"
 version = "23.3"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
@@ -896,4 +910,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ad6e3cc87c9b1d554bda65bf574be89c237dda2396f530c08584cd6d0b4aed9e"
+content-hash = "486da099b0adb41eb2c531abee68feaf948d94a82e9cdcaba431c52bfa502f85"

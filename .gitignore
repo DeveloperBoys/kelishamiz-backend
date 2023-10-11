@@ -126,6 +126,8 @@ celerybeat.pid
 .venv
 env/
 migrations/
+migrations/
+0001_initial.py/
 venv/
 media/
 static/

@@ -7,8 +7,19 @@ services:
       - .env
     build:
       context: .
+    depends_on:
+      - db
     ports:
       - "8000:8000"
+  db:
+    image: postgres:14.9
+    environment:
+      - POSTGRES_DB=kelishamiz
+      - POSTGRES_USER=murtazo
+      - POSTGRES_PASSWORD=murtazo#1280
+
+    volumes:
+      - pgdata:/var/lib/posgresql/data
   nginx:
     build: ./deploy/nginx
     volumes:
@@ -20,5 +31,4 @@ services:
 
 volumes:
   static:
-
-
+  pgdata:

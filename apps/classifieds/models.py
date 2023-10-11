@@ -43,21 +43,6 @@ class Category(Base):
         return None
 
 
-class DynamicField(Base):
-    """
-    DynamicField model for storing custom key-value attributes.
-    """
-    key = models.CharField(max_length=100)
-    value = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name = "Dynamic Field"
-        verbose_name_plural = "Dynamic Fields"
-
-    def __str__(self):
-        return f"key: {self.key} - value: {self.value}"
-
-
 class Classified(Base):
     """
     Classified model to store basic classifieds information.
@@ -102,8 +87,6 @@ class ClassifiedDetail(Base):
     price = models.DecimalField(max_digits=12, decimal_places=2)
     is_negotiable = models.BooleanField(default=False)
     description = models.TextField()
-    dynamic_fields = models.ManyToManyField(
-        DynamicField, blank=True, related_name='classified_details')
 
     class Meta:
         verbose_name = "Classified Detail"
@@ -130,3 +113,20 @@ class ClassifiedImage(Base):
         if self.image:
             return f"{settings.HOST}{self.image.url}"
         return None
+
+
+class DynamicField(Base):
+    """
+    DynamicField model for storing custom key-value attributes.
+    """
+    key = models.CharField(max_length=100)
+    value = models.CharField(max_length=255)
+    classified_detail = models.ForeignKey(
+        ClassifiedDetail, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Dynamic Field"
+        verbose_name_plural = "Dynamic Fields"
+
+    def __str__(self):
+        return f"key: {self.key} - value: {self.value}"

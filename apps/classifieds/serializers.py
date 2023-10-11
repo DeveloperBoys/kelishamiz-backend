@@ -102,7 +102,7 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
                   'dynamicFields', 'images')
 
     def get_dynamicFields(self, obj):
-        dynamic_fields = obj.dynamic_fields
+        dynamic_fields = DynamicField.objects.filter(classified_detail=obj)
         if dynamic_fields.exists():
             return DynamicFieldSerializer(dynamic_fields, many=True).data
         return None
@@ -188,7 +188,8 @@ class CreateClassifiedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classified
-        fields = ('category', 'title')
+        fields = ('id', 'category', 'title')
+        read_only_fields = ('id',)
 
     def create(self, validated_data):
         classified = Classified.objects.create(
@@ -207,12 +208,14 @@ class CreateClassifiedSerializer(serializers.ModelSerializer):
 
 
 class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
-    dynamicFields = DynamicFieldSerializer(many=True, source='dynamic_fields')
+    dynamicFields = DynamicFieldSerializer(
+        many=True, source="dynamicfield_set")
 
     class Meta:
         model = ClassifiedDetail
-        fields = ('classified', 'currency_type', 'price',
+        fields = ('id', 'classified', 'currency_type', 'price',
                   'is_negotiable', 'description', 'dynamicFields')
+        read_only_fields = ('id',)
 
     def validate(self, data):
         if not self.instance:
@@ -224,17 +227,28 @@ class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        dynamic_fields = validated_data.pop('dynamicFields')
-        classified_detail = ClassifiedDetail.objects.create(**validated_data)
+        dynamic_fields = validated_data.pop('dynamicfield_set')
+        classified = validated_data.pop('classified')
+        currency_type = validated_data.pop('currency_type')
+        price = validated_data.pop('price')
+        is_negotiable = validated_data.pop('is_negotiable')
+        description = validated_data.pop('description')
+        classified_detail = ClassifiedDetail.objects.create(
+            classified=classified,
+            currency_type=currency_type,
+            price=price,
+            is_negotiable=is_negotiable,
+            description=description
+        )
 
         for dynamic_field_data in dynamic_fields:
             DynamicField.objects.create(
                 key=dynamic_field_data['key'],
-                value=dynamic_field_data['value']
+                value=dynamic_field_data['value'],
+                classified_detail=classified_detail
             )
 
         # Attach dynamic fields to the detail
-        classified_detail.dynamic_fields.set(DynamicField.objects.all())
         classified_detail.classified.status = PENDING
         classified_detail.classified.save()
         return classified_detail
@@ -247,7 +261,7 @@ class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
             'description', instance.description)
 
         # Update dynamic fields
-        new_dynamic_fields = validated_data.get('dynamicFields')
+        new_dynamic_fields = validated_data.get('dynamicfield_set')
         if new_dynamic_fields:
             for dynamic_field_data in new_dynamic_fields:
                 dynamic_field, created = DynamicField.objects.get_or_create(

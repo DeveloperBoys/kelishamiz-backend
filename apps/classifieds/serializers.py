@@ -37,11 +37,11 @@ class CategorySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         request = self.context.get('request')
-        
+
         if request and request.method == 'GET':
             data.pop('icon', None)
             data.pop('parent', None)
-        
+
         return data
 
 
@@ -50,35 +50,36 @@ class DynamicFieldSerializer(serializers.ModelSerializer):
         model = DynamicField
         fields = ('id', 'key', 'value')
         read_only_fields = ('id', )
-        
-        
+
+
 class ClassifiedImageSerializer(serializers.ModelSerializer):
     imageUrl = serializers.URLField(source="image_url", read_only=True)
 
     class Meta:
         model = ClassifiedImage
         fields = ('id', 'classified', 'image', 'imageUrl',)
-        read_only_fields = ('id', )
-        
+        read_only_fields = ('id',)
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         request = self.context.get('request')
-        
+
         # Check if the request method is GET
         if request and request.method == 'GET':
             # Remove 'image' field for GET requests
             data.pop('image', None)
-        
+
         return data
-    
+
     def validate(self, data):
         if not self.instance:
             classified = data['classified']
             if classified.status != DRAFT:
-                raise serializers.ValidationError('Classified image must be in draft status')
+                raise serializers.ValidationError(
+                    'Classified image must be in draft status')
 
         return data
-    
+
     def create(self, validated_data):
         # Create a new image instance
         return ClassifiedImage.objects.create(**validated_data)
@@ -97,14 +98,15 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClassifiedDetail
-        fields = ('currencyType', 'price', 'description', 'dynamicFields', 'images')
-        
+        fields = ('currencyType', 'price', 'description',
+                  'dynamicFields', 'images')
+
     def get_dynamicFields(self, obj):
-        dynamic_fields = obj.dynamic_fields
+        dynamic_fields = DynamicField.objects.filter(classified_detail=obj)
         if dynamic_fields.exists():
             return DynamicFieldSerializer(dynamic_fields, many=True).data
         return None
-        
+
     def get_images(self, obj):
         images = ClassifiedImage.objects.filter(classified=obj.classified)
         if images.exists():
@@ -146,19 +148,19 @@ class ClassifiedSerializer(serializers.ModelSerializer):
         model = Classified
         fields = ('id', 'title', 'category', 'detail', 'isLiked', 'createdAt')
         read_only_fields = ('id',)
-        
+
     def get_category(self, obj):
         request = self.context.get('request')
         if request and request.method == 'GET':
             return obj.category.name
         return obj.category.pk
 
-    
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
-        instance.category.pk = validated_data.get('category', instance.category.pk)
+        instance.category.pk = validated_data.get(
+            'category', instance.category.pk)
         instance.save()
-        
+
         detail_data = validated_data.get('classifieddetail', {})
         detail_serializer = ClassifiedDetailSerializer(
             instance=instance.classifieddetail, data=detail_data, partial=True
@@ -167,77 +169,99 @@ class ClassifiedSerializer(serializers.ModelSerializer):
             detail_serializer.save()
 
         return instance
-    
-    
+
+
 class DeleteClassifiedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Classified
-        fields = ('id',)  # Only include the 'id' field to identify the classified
+        # Only include the 'id' field to identify the classified
+        fields = ('id',)
 
     def update(self, instance, validated_data):
         # Change the status of the classified to 'DELETE'
         instance.status = DELETED
         instance.save()
         return instance
-        
-        
+
+
 class CreateClassifiedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classified
-        fields = ('category', 'title')
+        fields = ('id', 'category', 'title')
+        read_only_fields = ('id',)
 
     def create(self, validated_data):
         classified = Classified.objects.create(
-            owner=self.context['request'].user, 
+            owner=self.context['request'].user,
             status=DRAFT,
             **validated_data
         )
         return classified
-    
+
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
-        instance.category.pk = validated_data.get('category', instance.category.pk)
+        instance.category.pk = validated_data.get(
+            'category', instance.category.pk)
         instance.save()
         return instance
 
 
 class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
-    dynamicFields = DynamicFieldSerializer(many=True)
+    dynamicFields = DynamicFieldSerializer(
+        many=True, source="dynamicfield_set")
 
     class Meta:
         model = ClassifiedDetail
-        fields = ('classified', 'currency_type', 'price', 
+        fields = ('id', 'classified', 'currency_type', 'price',
                   'is_negotiable', 'description', 'dynamicFields')
-        
+        read_only_fields = ('id',)
+
     def validate(self, data):
         if not self.instance:
             classified = data['classified']
             if classified.status != DRAFT:
-                raise serializers.ValidationError("Classified detail must be in draft status")
-        
+                raise serializers.ValidationError(
+                    "Classified detail must be in draft status")
+
         return data
 
     def create(self, validated_data):
-        dynamic_fields = validated_data.pop('dynamicFields')
-        classified_detail = ClassifiedDetail.objects.create(**validated_data)
-        for dynamic_field in dynamic_fields:
+        dynamic_fields = validated_data.pop('dynamicfield_set')
+        classified = validated_data.pop('classified')
+        currency_type = validated_data.pop('currency_type')
+        price = validated_data.pop('price')
+        is_negotiable = validated_data.pop('is_negotiable')
+        description = validated_data.pop('description')
+        classified_detail = ClassifiedDetail.objects.create(
+            classified=classified,
+            currency_type=currency_type,
+            price=price,
+            is_negotiable=is_negotiable,
+            description=description
+        )
+
+        for dynamic_field_data in dynamic_fields:
             DynamicField.objects.create(
-                classified_detail=classified_detail, 
-                **dynamic_field
+                key=dynamic_field_data['key'],
+                value=dynamic_field_data['value'],
+                classified_detail=classified_detail
             )
-        classified = classified_detail.classified
-        classified.status = PENDING
-        classified.save()
+
+        # Attach dynamic fields to the detail
+        classified_detail.classified.status = PENDING
+        classified_detail.classified.save()
         return classified_detail
 
     def update(self, instance, validated_data):
-        instance.currency_type = validated_data.get('currency_type', instance.currency_type)  
+        instance.currency_type = validated_data.get(
+            'currency_type', instance.currency_type)
         instance.price = validated_data.get('price', instance.price)
-        instance.description = validated_data.get('description', instance.description)
+        instance.description = validated_data.get(
+            'description', instance.description)
 
         # Update dynamic fields
-        new_dynamic_fields = validated_data.get('dynamicFields')
+        new_dynamic_fields = validated_data.get('dynamicfield_set')
         if new_dynamic_fields:
             for dynamic_field_data in new_dynamic_fields:
                 dynamic_field, created = DynamicField.objects.get_or_create(

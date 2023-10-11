@@ -5,14 +5,18 @@ from apps.classifieds.models import DRAFT
 
 class DraftClassifiedPermission(permissions.BasePermission):
 
-  def has_object_permission(self, request, view, obj):
-    return request.method in ['GET', 'POST', 'DELETE'] and obj.status == DRAFT
+    def has_object_permission(self, request, view, obj):
+        if hasattr(obj, 'classified'):
+            return request.method in ['GET', 'PUT', 'PATCH', 'DELETE'] and obj.classified.status == DRAFT
+        elif hasattr(obj, 'owner'):
+            return request.method in ['GET', 'PUT', 'PATCH', 'DELETE'] and obj.status == DRAFT
+        return False
 
 
 class PublishedClassifiedPermission(permissions.BasePermission):
 
-  def has_object_permission(self, request, view, obj):
-    return request.method in ['GET', 'PUT', 'PATCH', 'DELETE'] and obj.status != DRAFT
+    def has_object_permission(self, request, view, obj):
+        return request.method in ['GET', 'PUT', 'PATCH', 'DELETE'] and obj.status != DRAFT
 
 
 class ClassifiedOwner(permissions.BasePermission):
@@ -21,7 +25,12 @@ class ClassifiedOwner(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        return obj.owner == request.user
+        # Check if the request user is the owner of the associated classified
+        if hasattr(obj, 'classified'):
+            return obj.classified.owner == request.user
+        elif hasattr(obj, 'owner'):
+            return obj.owner == request.user
+        return False
 
 
 class ClassifiedOwnerOrReadOnly(permissions.BasePermission):

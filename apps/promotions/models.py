@@ -1,5 +1,7 @@
 from django.db import models
 
+from apps.classifieds.models import Classified
+
 
 class Promotion(models.Model):
     name = models.CharField(max_length=100)
@@ -14,6 +16,6 @@ class Promotion(models.Model):
 
 
 class PromotionClassified(models.Model):
-    classified = models.ForeignKey()
+    classified = models.ForeignKey(Classified, on_delete=models.CASCADE)
     promotion = models.ForeignKey(Promotion, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=False)

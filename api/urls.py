@@ -36,17 +36,17 @@ classified_urlpatterns = [
 ]
 
 likes_urlpatterns = [
-    path('create-like/', likes_views.CreateClassifiedLikeView.as_view(),
+    path('likes/create/', likes_views.CreateClassifiedLikeView.as_view(),
          name='create-like'),
-    path('get-likes/', likes_views.GetClassifiedLikeView.as_view(), name='get-likes'),
-    path('delete-like/<int:pk>/',
+    path('likes/get/', likes_views.GetClassifiedLikeView.as_view(), name='get-likes'),
+    path('likes/delete/<int:pk>/',
          likes_views.DeleteClassifiedLikeView.as_view(), name='delete-like'),
 ]
 
 
 user_urlpatterns = [
     path('admin/login/', user_views.AdminLoginView.as_view(), name='admin-login'),
-    path('user/login/', user_views.UserLoginView.as_view(), name='user-login'),
+    path('login', user_views.UserLoginView.as_view(), name='user-login'),
     path('login/verify/', user_views.VerifyApiView.as_view(),
          name='phone_number_verify'),
     path('login/refresh/', user_views.CustomTokenRefreshView.as_view(),

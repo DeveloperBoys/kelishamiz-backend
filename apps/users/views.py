@@ -1,42 +1,57 @@
 from datetime import datetime
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 
-from rest_framework.views import APIView
+from drf_yasg.openapi import Schema, Response as SwaggerResponse
+from drf_yasg.utils import swagger_auto_schema
+
 from rest_framework.response import Response
 from rest_framework import permissions, status
+from rest_framework.schemas import ManualSchema
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework.generics import GenericAPIView
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework.generics import GenericAPIView, UpdateAPIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
-from .serializers import (ChangeUserInformationSerializer, UserLoginSerializer,
-                          AdminLoginSerializer, LogoutSerializer, UserDataSerializer)
+from .models import User
+from .serializers import (ChangeUserInformationSerializer, UserLoginSerializer, VerifyRequestSerializer,
+                          AdminLoginSerializer, LogoutSerializer, UserDataSerializer, CustomTokenRefreshSerializer)
 
 
 class AdminLoginView(TokenObtainPairView):
     serializer_class = AdminLoginSerializer
 
 
-class UserLoginView(APIView):
+class UserLoginView(GenericAPIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = UserLoginSerializer
 
+    @method_decorator(cache_page(60*60*2))
+    @method_decorator(vary_on_cookie)
     def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
+        serializer = self.get_serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
-class VerifyApiView(APIView):
+class VerifyApiView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = VerifyRequestSerializer
 
+    @method_decorator(cache_page(60*60*2))
+    @method_decorator(vary_on_cookie)
     def post(self, request, *args, **kwargs):
-        user, code = self.request.user, self.request.data.get('code')
+        serializer = self.get_serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        code = serializer.validated_data['code']
+        user = self.request.user
         self.check_verify(user, code)
         return Response(
             data={
@@ -46,6 +61,8 @@ class VerifyApiView(APIView):
             }, status=200)
 
     @staticmethod
+    @method_decorator(cache_page(60*60*2))
+    @method_decorator(vary_on_cookie)
     def check_verify(user, code):
         verifies = user.verify_codes.filter(
             expiration_time__gte=datetime.now(), code=code, is_confirmed=False)
@@ -81,59 +98,35 @@ class LogoutView(GenericAPIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class CustomTokenRefreshView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        refresh_token = request.data.get('refresh')
-        if not refresh_token:
-            raise AuthenticationFailed("No refresh token provided.")
-
-        try:
-            token = RefreshToken(refresh_token)
-            access_token = str(token.access_token)
-        except Exception as e:
-            raise AuthenticationFailed("Invalid refresh token.")
-
-        return Response({'access': access_token}, status=status.HTTP_200_OK)
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
 
 
-class LogoutView(APIView):
+class UserDataView(GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserDataSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = LogoutSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        try:
-            refresh_token = serializer.validated_data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-        except Exception as e:
-            raise AuthenticationFailed("Failed to logout. Please try again.")
-
-        return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
-
-
-class UserDataView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
+    @method_decorator(cache_page(60*60*2))
+    @method_decorator(vary_on_cookie)
     def get(self, request):
-        serializer = UserDataSerializer(request.user)
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def get_queryset(self):
+        if self.request is not None:
+            return User.objects.filter(self.request.user)
+        return User.objects.none()
 
-class ChangeUserInformationView(APIView):
+
+class ChangeUserInformationView(UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChangeUserInformationSerializer
+    http_method_names = ['patch', 'put']
 
-    def patch(self, request):
-        serializer = ChangeUserInformationSerializer(
-            data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+    @method_decorator(cache_page(60*60*2))
+    @method_decorator(vary_on_cookie)
+    def get_object(self):
+        return self.request.user
 
-        user = request.user
-        try:
-            user = serializer.update(user, serializer.validated_data)
-            return Response({'message': 'User information updated successfully.'}, status=status.HTTP_200_OK)
-        except ValidationError as e:
-            return Response({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
+    def partial_update(self, request, *args, **kwargs):
+        return Response(data={"detail": "Updated successfully"}, status=status.HTTP_200_OK)

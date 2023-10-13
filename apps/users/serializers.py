@@ -1,13 +1,13 @@
-from rest_framework import exceptions
+from drf_yasg.openapi import Schema
 
 from django.db.models import Q
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 
+from rest_framework import exceptions
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from rest_framework.exceptions import ValidationError, PermissionDenied
-
+from rest_framework.exceptions import ValidationError
 
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
@@ -16,6 +16,10 @@ from config.utility import check_phone, check_user_type
 from .utils import phone_parser
 from .tasks import send_phone_notification
 from .models import User
+
+
+class VerifyRequestSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True)
 
 
 class AdminLoginSerializer(TokenObtainPairSerializer):
@@ -71,7 +75,8 @@ class AdminLoginSerializer(TokenObtainPairSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    phone_number = serializers.CharField(required=False)
+
+    phone_number = serializers.CharField(required=True)
 
     def validate_phone_number(self, phone_number):
 
@@ -131,8 +136,8 @@ class LogoutSerializer(serializers.Serializer):
 class UserDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'father_name',
-                  'email', 'phone_number', 'sex', 'birth_date']
+        fields = ('first_name', 'last_name', 'father_name',
+                  'email', 'phone_number', 'birth_date')
 
 
 class ChangeUserInformationSerializer(serializers.Serializer):
@@ -142,8 +147,6 @@ class ChangeUserInformationSerializer(serializers.Serializer):
         write_only=True, required=False, allow_null=True)
     email = serializers.EmailField(write_only=True, required=True)
     phone_number = serializers.CharField(write_only=True, required=True)
-    sex = serializers.CharField(
-        write_only=True, required=False, allow_null=True)
     birth_date = serializers.DateField(
         write_only=True, required=False, allow_null=True)
 
@@ -166,7 +169,6 @@ class ChangeUserInformationSerializer(serializers.Serializer):
             'last_name', instance.last_name)
         instance.father_name = validated_data.get(
             'father_name', instance.father_name)
-        instance.sex = validated_data.get('sex', instance.sex)
         instance.email = validated_data.get('email', instance.email)
         instance.birth_date = validated_data.get(
             'birth_date', instance.birth_date)

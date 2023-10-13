@@ -86,7 +86,10 @@ class CreateClassifiedView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return ClassifiedImage.objects.filter(owner=self.request.user)
+        try:
+            return Classified.objects.filter(classified__owner=self.request.user)
+        except:
+            return None
 
 
 class CreateClassifiedImageView(generics.CreateAPIView):
@@ -94,11 +97,23 @@ class CreateClassifiedImageView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated,
                           ClassifiedOwner, DraftClassifiedPermission]
 
+    def get_queryset(self):
+        try:
+            return ClassifiedImage.objects.filter(classified__owner=self.request.user)
+        except:
+            return None
+
 
 class CreateClassifiedDetailView(generics.CreateAPIView):
     serializer_class = CreateClassifiedDetailSerializer
     permission_classes = [permissions.IsAuthenticated,
                           ClassifiedOwner, DraftClassifiedPermission]
+
+    def get_queryset(self):
+        try:
+            return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+        except:
+            return None
 
 
 @swagger_auto_schema(exclude=['get_queryset'])
@@ -108,7 +123,10 @@ class EditClassifiedView(generics.UpdateAPIView):
                           ClassifiedOwner, PublishedClassifiedPermission]
 
     def get_queryset(self):
-        return Classified.objects.filter(owner=self.request.user)
+        try:
+            return Classified.objects.filter(classified__owner=self.request.user)
+        except:
+            return None
 
 
 class EditClassifiedImageView(generics.UpdateAPIView):
@@ -117,7 +135,10 @@ class EditClassifiedImageView(generics.UpdateAPIView):
                           ClassifiedOwner, PublishedClassifiedPermission]
 
     def get_queryset(self):
-        return ClassifiedImage.objects.filter(classified__owner=self.request.user)
+        try:
+            return ClassifiedImage.objects.filter(classified__owner=self.request.user)
+        except:
+            return None
 
 
 class EditClassifiedDetailView(generics.UpdateAPIView):
@@ -126,4 +147,7 @@ class EditClassifiedDetailView(generics.UpdateAPIView):
                           ClassifiedOwner, PublishedClassifiedPermission]
 
     def get_queryset(self):
-        return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+        try:
+            return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+        except:
+            return None

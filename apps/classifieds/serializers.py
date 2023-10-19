@@ -13,12 +13,12 @@ from .models import (
 
 
 class ChildCategorySerializer(serializers.ModelSerializer):
-    iconUrl = serializers.CharField(source="icon_url")
+    iconUrl = serializers.CharField(source="icon_url", read_only=True)
 
     class Meta:
         model = Category
         fields = ('id', 'name', 'iconUrl')
-        read_only_fields = ('id', 'iconUrl')
+        read_only_fields = ('id',)
 
 
 class CategorySerializer(serializers.ModelSerializer):

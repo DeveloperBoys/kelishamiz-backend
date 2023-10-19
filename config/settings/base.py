@@ -84,7 +84,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -185,6 +185,10 @@ CORS_ALLOW_HEADERS = [
     '*'
 ]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = [
+    'https://*',
+    'http://*'
+]
 CORS_ORIGIN_ALLOW_ALL = True
 
 HOST = config("HOST_URL")

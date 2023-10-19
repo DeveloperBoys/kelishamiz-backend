@@ -3,6 +3,7 @@ services:
   kelishamiz_backend:
     volumes:
       - static:/static
+      - media:/media
     env_file:
       - .env
     build:
@@ -14,6 +15,7 @@ services:
   db:
     image: postgres:14.9
     environment:
+      - MEDIA_URL=/media/
       - POSTGRES_DB=kelishamiz
       - POSTGRES_USER=murtazo
       - POSTGRES_PASSWORD=murtazo#1280
@@ -32,3 +34,4 @@ services:
 volumes:
   static:
   pgdata:
+  media:

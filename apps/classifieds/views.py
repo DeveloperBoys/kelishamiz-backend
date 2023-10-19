@@ -29,14 +29,12 @@ class ClassifiedPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
 
 
-@method_decorator(cache_page(60*15), name='dispatch')
 class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.filter(parent=None)
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly, )
 
 
-@method_decorator(cache_page(60*15), name='dispatch')
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer

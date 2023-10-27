@@ -1,28 +1,36 @@
 version: '3.7'
+
 services:
+
   kelishamiz_backend:
+    image: backend
     volumes:
       - static:/static
-      - media:/media
+      - media_volume:/media/uploads
     env_file:
       - .env
+    networks:
+      - backend
     build:
       context: .
     depends_on:
       - db
     ports:
       - "8000:8000"
+
   db:
     image: postgres:14.9
     environment:
-      - MEDIA_URL=/media/
-      - POSTGRES_DB=kelishamiz
-      - POSTGRES_USER=murtazo
-      - POSTGRES_PASSWORD=murtazo#1280
-
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
     volumes:
-      - pgdata:/var/lib/posgresql/data
+      - dbdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
   nginx:
+    image: nginx
     build: ./deploy/nginx
     volumes:
       - static:/static
@@ -30,8 +38,14 @@ services:
       - "80:80"
     depends_on:
       - kelishamiz_backend
+    networks:
+      - backend
 
 volumes:
-  static:
+  media_volume:
   pgdata:
-  media:
+  static:
+
+
+networks:
+  backend:

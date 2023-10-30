@@ -13,7 +13,7 @@ from .models import (
 
 
 class ChildCategorySerializer(serializers.ModelSerializer):
-    iconUrl = serializers.CharField(source="icon_url", read_only=True)
+    iconUrl = serializers.URLField(source="icon_url", read_only=True)
 
     class Meta:
         model = Category
@@ -22,7 +22,7 @@ class ChildCategorySerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    iconUrl = serializers.CharField(source="icon_url", read_only=True)
+    iconUrl = serializers.URLField(source="icon_url", read_only=True)
     childs = serializers.SerializerMethodField()
 
     class Meta:
@@ -41,6 +41,8 @@ class CategorySerializer(serializers.ModelSerializer):
         if request and request.method == 'GET':
             data.pop('icon', None)
             data.pop('parent', None)
+        elif request and request.method == 'POST' or 'PUT' or 'PATCH':
+            data.pop('iconUrl', None)
 
         return data
 

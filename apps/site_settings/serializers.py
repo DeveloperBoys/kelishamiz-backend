@@ -11,7 +11,7 @@ from .models import (
 class SocialMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialMedia
-        fields = ['name', 'url']
+        fields = ['id', 'name', 'url']
 
 
 class AppStoreLinkSerializer(serializers.ModelSerializer):
@@ -21,18 +21,19 @@ class AppStoreLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AppStoreLink
-        fields = ['appName', 'iosUrl', 'androidUrl']
+        fields = ['id', 'appName', 'iosUrl', 'androidUrl']
 
 
 class CompanyInfoSerializer(serializers.ModelSerializer):
     phoneNumber = serializers.CharField(source='phone_number')
     socialMedia = SocialMediaSerializer(many=True, source='social_media')
-    appLinks = AppStoreLinkSerializer(source='app_links')
-    logoUrl = serializers.URLField(source='logo_url')
+    appLinks = AppStoreLinkSerializer(many=True, source='app_links')
+    logoUrl = serializers.URLField(source='logo_url', read_only=True)
 
     class Meta:
         model = CompanyInfo
-        fields = ['phoneNumber', 'socialMedia', 'appLinks', 'logoUrl', 'logo']
+        fields = ['id', 'phoneNumber', 'socialMedia',
+                  'appLinks', 'logoUrl', 'logo']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -40,7 +41,7 @@ class CompanyInfoSerializer(serializers.ModelSerializer):
 
         if request and request.method == 'GET':
             data.pop('logo', None)
-        elif request and request.method == 'POST' or 'PUT' or 'PATCH':
+        elif request and request.method == 'POST' or 'PUT' or 'PATCH' or 'DELETE':
             data.pop('logoUrl', None)
 
         return data
@@ -48,8 +49,20 @@ class CompanyInfoSerializer(serializers.ModelSerializer):
 
 class BannerSerializer(serializers.ModelSerializer):
     shortDescription = serializers.CharField(source='short_description')
-    imageUrl = serializers.URLField(source='image_url')
+    imageUrl = serializers.URLField(source='image_url', read_only=True)
 
     class Meta:
         model = Banner
-        fields = ['title', 'shortDescription', 'imageUrl', 'url']
+        fields = ['id', 'title', 'shortDescription',
+                  'imageUrl', 'image', 'url']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+
+        if request and request.method == 'GET':
+            data.pop('image', None)
+        elif request and request.method == 'POST' or 'PUT' or 'PATCH' or 'DELETE':
+            data.pop('imageUrl', None)
+
+        return data

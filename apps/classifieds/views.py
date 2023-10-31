@@ -5,8 +5,6 @@ from rest_framework.filters import SearchFilter
 from rest_framework import generics, permissions
 from rest_framework.pagination import PageNumberPagination
 
-from drf_yasg.utils import swagger_auto_schema
-
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.permissions.permissions import PublishedClassifiedPermission, ClassifiedOwner, IsAdminOrReadOnly, DraftClassifiedPermission
@@ -29,18 +27,21 @@ class ClassifiedPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
 
 
+@method_decorator(cache_page(60*15), name='dispatch')
 class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.filter(parent=None)
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly, )
 
 
+@method_decorator(cache_page(60*15), name='dispatch')
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly, )
 
 
+@method_decorator(cache_page(60*15), name='dispatch')
 class ClassifiedListView(generics.ListAPIView):
     queryset = Classified.objects.filter(
         status=APPROVED).order_by('-created_at')
@@ -63,7 +64,6 @@ class ClassifiedListView(generics.ListAPIView):
 
         return queryset
 
-    @method_decorator(cache_page(60*15))
     def list(self, request):
         page = request.query_params.get('page')
 
@@ -86,7 +86,7 @@ class ClassifiedDetailView(generics.ListAPIView):
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
-class DeleteClassifiedView(generics.UpdateAPIView):
+class DeleteClassifiedView(generics.DestroyAPIView):
     queryset = Classified.objects.all()
     serializer_class = DeleteClassifiedSerializer
     permission_classes = [permissions.IsAuthenticated,
@@ -125,13 +125,9 @@ class CreateClassifiedDetailView(generics.CreateAPIView):
                           ClassifiedOwner, DraftClassifiedPermission]
 
     def get_queryset(self):
-        try:
-            return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
-        except:
-            return None
+        return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
 
 
-@swagger_auto_schema(exclude=['get_queryset'])
 @method_decorator(cache_page(60*15), name='dispatch')
 class EditClassifiedView(generics.UpdateAPIView):
     serializer_class = CreateClassifiedSerializer
@@ -146,26 +142,20 @@ class EditClassifiedView(generics.UpdateAPIView):
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
-class EditClassifiedImageView(generics.UpdateAPIView):
+class EditClassifiedImageView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ClassifiedImageSerializer
     permission_classes = [permissions.IsAuthenticated,
                           ClassifiedOwner, PublishedClassifiedPermission]
 
     def get_queryset(self):
-        try:
-            return ClassifiedImage.objects.filter(classified__owner=self.request.user)
-        except:
-            return None
+        return ClassifiedImage.objects.filter(classified__owner=self.request.user)
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
-class EditClassifiedDetailView(generics.UpdateAPIView):
+class EditClassifiedDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CreateClassifiedDetailSerializer
     permission_classes = [permissions.IsAuthenticated,
                           ClassifiedOwner, PublishedClassifiedPermission]
 
     def get_queryset(self):
-        try:
-            return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
-        except:
-            return None
+        return ClassifiedDetail.objects.filter(classified__owner=self.request.user)

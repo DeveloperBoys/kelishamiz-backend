@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.utils.translation import gettext as _
 
 
@@ -67,3 +68,9 @@ class Banner(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def image_url(self):
+        if self.image:
+            return f"{settings.HOST}{self.image.url}"
+        return None

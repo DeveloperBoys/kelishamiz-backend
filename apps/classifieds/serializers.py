@@ -41,7 +41,7 @@ class CategorySerializer(serializers.ModelSerializer):
         if request and request.method == 'GET':
             data.pop('icon', None)
             data.pop('parent', None)
-        elif request and request.method == 'POST' or 'PUT' or 'PATCH':
+        elif request and request.method == 'POST' or 'PUT' or 'PATCH' or 'DELETE':
             data.pop('iconUrl', None)
 
         return data
@@ -66,10 +66,10 @@ class ClassifiedImageSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         request = self.context.get('request')
 
-        # Check if the request method is GET
         if request and request.method == 'GET':
-            # Remove 'image' field for GET requests
             data.pop('image', None)
+        elif request and request.method == 'POST' or 'PUT' or 'PATCH' or 'DELETE':
+            data.pop('imageUrl', None)
 
         return data
 
@@ -83,11 +83,9 @@ class ClassifiedImageSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Create a new image instance
         return ClassifiedImage.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        # Update an existing image instance
         instance.image = validated_data.get('image', instance.image)
         instance.save()
         return instance
@@ -176,11 +174,9 @@ class ClassifiedSerializer(serializers.ModelSerializer):
 class DeleteClassifiedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Classified
-        # Only include the 'id' field to identify the classified
         fields = ('id',)
 
     def update(self, instance, validated_data):
-        # Change the status of the classified to 'DELETE'
         instance.status = DELETED
         instance.save()
         return instance

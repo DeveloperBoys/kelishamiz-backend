@@ -6,7 +6,7 @@ services:
     image: backend
     volumes:
       - static:/static
-      - media_volume:/media/uploads
+      - media:/media/uploads
     env_file:
       - .env
     networks:
@@ -41,8 +41,21 @@ services:
     networks:
       - backend
 
+  celery:
+    image: celery
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    command: celery -A kelishamiz worker --loglevel=info
+    environment:
+      - DJANGO_DB_HOST=db
+  redis:
+    image: redis:latest
+
 volumes:
-  media_volume:
+  media:
   pgdata:
   static:
 

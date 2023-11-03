@@ -11,4 +11,4 @@ def send_phone_notification(phone, code):
     message = f"Assalomu alaykum! Sizning tasdiqlash kodingiz: {code}\nIltimos bu tasdiqlash kodini hechkimga bermang!"
 
     client = EskizSMS(email=email, password=password)
-    client.send_sms(mobile_phone=phone, message=message)
+    client.send_sms(mobile_phone=f"+{phone}", message=message)

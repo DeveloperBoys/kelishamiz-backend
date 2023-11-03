@@ -1,6 +1,10 @@
 import threading
 import phonenumbers
 
+from decouple import config
+
+from eskiz_sms import EskizSMS
+
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
@@ -43,13 +47,13 @@ def send_email(email, code):
     })
 
 
-# def send_phone_notification(phone, code):
-#     email = config('ESKIZ_EMAIL')
-#     password = config('ESKIZ_PASSWORD')
-#     message = f"Assalomu alaykum! Sizning tasdiqlash kodingiz: {code}\nIltimos bu tasdiqlash kodini hechkimga bermang!"
-#     client = EskizSMS(email=email, password=password)
-#     # client.token.set(your_saved_token)
-#     client.send_sms(mobile_phone=phone, message=message)
+def send_phone_notification(phone, code):
+    email = config('ESKIZ_EMAIL')
+    password = config('ESKIZ_PASSWORD')
+    message = f"Assalomu alaykum! Sizning tasdiqlash kodingiz: {code}\nIltimos bu tasdiqlash kodini hechkimga bermang!"
+    client = EskizSMS(email=email, password=password)
+    # client.token.set(your_saved_token)
+    client.send_sms(mobile_phone=f"+{phone}", message=message)
 
 
 def phone_checker(p_number):
@@ -60,6 +64,7 @@ def phone_checker(p_number):
 def phone_parser(p_number, c_code=None):
     try:
         phone_checker(p_number)
+        p_number = '+'+p_number
         return phonenumbers.parse(p_number, c_code)
     except Exception as e:
         raise ValidationError("Phone number is not valid")

@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-
 from datetime import timedelta
 
 from decouple import config
@@ -39,11 +38,7 @@ THIRD_PARTY_APPS = [
     'corsheaders',
     'drf_yasg',
     'rest_framework',
-    'django_filters',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
+    'django_filters'
 ]
 
 INSTALLED_APPS = BASE_APPS + LOCAL_APPS + THIRD_PARTY_APPS
@@ -149,29 +144,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id': 'your-google-client-id',
-            'secret': 'your-google-secret',
-            'key': ''
-        }
-    },
-    'telegram': {
-        'BOT_TOKEN': 'your-telegram-bot-token',
-        'WEBHOOK_SECRET': 'your-webhook-secret',
-    },
-    'apple': {
-        'TEAM_ID': 'your-apple-team-id',
-        'CLIENT_ID': 'your-apple-client-id',
-        'SECRET': 'your-apple-secret',
-        'KEY_ID': 'your-apple-key-id',
-        'SCOPE': ['email', 'name'],
-    }
-}
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

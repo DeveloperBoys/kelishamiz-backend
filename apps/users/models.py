@@ -11,8 +11,13 @@ from django.contrib.auth.models import BaseUserManager
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-# from .managers import UserManager
-from .constants import VIA_PHONE, VIA_SOCIAL, ORDINARY_USER, MANAGER, SUPER_USER
+from .constants import (
+    MANAGER,
+    VIA_PHONE,
+    VIA_SOCIAL,
+    SUPER_USER,
+    ORDINARY_USER,
+)
 
 
 PHONE_EXPIRE = 2
@@ -48,13 +53,6 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    @staticmethod
-    def generate_random_username():
-        temp_username = f"kelishamiz-{uuid.uuid4().hex[:8]}"
-        while User.objects.filter(username=temp_username).exists():
-            temp_username += str(random.randint(0, 9))
-        return temp_username
-
 
 class BaseModel(models.Model):
     guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
@@ -69,15 +67,10 @@ class UserConfirmation(models.Model):
     """
     Model to store user verification codes and related information.
     """
-    TYPE_CHOICES = (
-        (VIA_PHONE, VIA_PHONE),
-        (VIA_SOCIAL, VIA_SOCIAL)
-    )
 
-    code = models.CharField(max_length=4)
+    code = models.CharField(max_length=6)
     user = models.ForeignKey(
         'users.User', on_delete=models.CASCADE, related_name='verify_codes')
-    verify_type = models.CharField(max_length=31, choices=TYPE_CHOICES)
     expiration_time = models.DateTimeField(null=True)
     is_confirmed = models.BooleanField(default=False)
 
@@ -88,7 +81,7 @@ class UserConfirmation(models.Model):
         """
         Override the save method to set expiration time for phone verification codes.
         """
-        if not self.pk and self.verify_type == VIA_PHONE:
+        if not self.pk:
             self.expiration_time = datetime.now() + timedelta(minutes=PHONE_EXPIRE)
         super(UserConfirmation, self).save(*args, **kwargs)
 
@@ -98,7 +91,7 @@ class User(AbstractUser, BaseModel):
     Custom user model with extended fields and methods.
     """
     _validate_phone = RegexValidator(
-        regex=r"^\+998([378]{2}|(9[013-57-9]))\d{7}$",
+        regex=r"^998([378]{2}|(9[013-57-9]))\d{7}$",
         message="Your phone number must be connected with +9 and 12 characters! For example: 998998887766"
     )
     AUTH_TYPE_CHOICES = (
@@ -143,17 +136,23 @@ class User(AbstractUser, BaseModel):
         if self.profile_image:
             return f"{settings.HOST}{self.profile_image.url}"
 
-    def create_verify_code(self, verify_type):
+    def create_verify_code(self):
         """
         Create and store a verification code for the user.
         """
-        code = "".join(str(random.randint(0, 9)) for _ in range(6))
+        code = "".join(
+            [str(random.randint(0, 100) % 10) for _ in range(6)])
         UserConfirmation.objects.create(
-            user=self,
-            verify_type=verify_type,
-            code=code
+            user=self, code=code
         )
         return code
+
+    def check_username(self):
+        if not self.username:
+            temp_username = f"Kelishamiz-{uuid.uuid4().__str__().split('-')[-1]}"
+            while User.objects.filter(username=temp_username):
+                temp_username = f'{temp_username}{random.randint(0, 9)}'
+            self.username = temp_username
 
     def check_email(self):
         """
@@ -161,6 +160,11 @@ class User(AbstractUser, BaseModel):
         """
         if self.email:
             self.email = self.email.lower()
+
+    def check_pass(self):
+        if not self.password:
+            temp_password = f"password{uuid.uuid4().__str__().split('-')[-1]}"
+            self.password = temp_password
 
     def hashing_password(self):
         """
@@ -180,9 +184,15 @@ class User(AbstractUser, BaseModel):
         }
 
     def save(self, *args, **kwargs):
+        if not self.pk:
+            self.clean()
+        super(User, self).save(*args, **kwargs)
+
+    def clean(self):
         """
-        Normalize email, hash password, and then save the user.
+        Normalize email, hash password the user.
         """
         self.check_email()
+        self.check_username()
+        self.check_pass()
         self.hashing_password()
-        super(User, self).save(*args, **kwargs)

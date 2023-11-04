@@ -6,7 +6,6 @@ services:
     image: backend
     volumes:
       - static:/static
-      - media_volume:/media/uploads
     env_file:
       - .env
     networks:
@@ -23,7 +22,7 @@ services:
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - dbdata:/var/lib/postgresql/data
     networks:
@@ -41,8 +40,22 @@ services:
     networks:
       - backend
 
+  celery:
+    image: celery
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    command: celery -A kelishamiz worker --loglevel=info -E
+    environment:
+      - DJANGO_DB_HOST=db
+
+  redis:
+    image: redis:latest
+
 volumes:
-  media_volume:
   pgdata:
   static:
 

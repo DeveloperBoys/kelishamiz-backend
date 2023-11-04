@@ -4,29 +4,16 @@ from apps.permissions.permissions import IsAdminOrReadOnly
 
 from .models import (
     Banner,
-    SocialMedia,
-    CompanyInfo,
+    Company,
     AppStoreLink,
+    SocialMediaProfile
 )
-
 from .serializers import (
     BannerSerializer,
-    SocialMediaSerializer,
-    CompanyInfoSerializer,
+    CompanySerializer,
     AppStoreLinkSerializer,
+    SocialMediaProfileSerializer
 )
-
-
-class SocialMediaListCreateView(generics.ListCreateAPIView):
-    queryset = SocialMedia.objects.all()
-    serializer_class = SocialMediaSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-
-class SocialMediaDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = SocialMedia.objects.all()
-    serializer_class = SocialMediaSerializer
-    permission_classes = [IsAdminOrReadOnly]
 
 
 class AppStoreLinkListCreateView(generics.ListCreateAPIView):
@@ -35,21 +22,33 @@ class AppStoreLinkListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAdminOrReadOnly]
 
 
-class AppStoreLinkDetailView(generics.RetrieveUpdateDestroyAPIView):
+class AppStoreLinkRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = AppStoreLink.objects.all()
     serializer_class = AppStoreLinkSerializer
     permission_classes = [IsAdminOrReadOnly]
 
 
-class CompanyInfoListCreateView(generics.ListCreateAPIView):
-    queryset = CompanyInfo.objects.all()
-    serializer_class = CompanyInfoSerializer
+class SocialMediaProfileListCreateView(generics.ListCreateAPIView):
+    queryset = SocialMediaProfile.objects.all()
+    serializer_class = SocialMediaProfileSerializer
     permission_classes = [IsAdminOrReadOnly]
 
 
-class CompanyInfoDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CompanyInfo.objects.all()
-    serializer_class = CompanyInfoSerializer
+class SocialMediaProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = SocialMediaProfile.objects.all()
+    serializer_class = SocialMediaProfileSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class CompanyListCreateView(generics.ListCreateAPIView):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class CompanyRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
     permission_classes = [IsAdminOrReadOnly]
 
 

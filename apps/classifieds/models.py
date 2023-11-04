@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+from .base import Base
+
 
 User = get_user_model()
 
@@ -9,14 +11,6 @@ User = get_user_model()
 DRAFT, PENDING, APPROVED, REJECTED, DELETED = (
     "draft", "pending", "approved", "rejected", "deleted"
 )
-
-
-class Base(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
 
 
 class Category(Base):
@@ -58,7 +52,7 @@ class Classified(Base):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(
-        max_length=8, choices=CLASSIFIED_STATUS, default=DRAFT)
+        max_length=8, db_index=True, choices=CLASSIFIED_STATUS, default=DRAFT)
     title = models.CharField(max_length=150)
     is_liked = models.BooleanField(default=False)
 
@@ -81,7 +75,7 @@ class ClassifiedDetail(Base):
     ClassifiedDetail model to store detailed information about classifieds.
     """
     classified = models.OneToOneField(
-        Classified, related_name='classifieddetail', on_delete=models.CASCADE)
+        Classified, related_name='detail', on_delete=models.CASCADE)
     currency_type = models.CharField(
         max_length=3, choices=(("usd", "USD"), ("uzs", "UZS")))
     price = models.DecimalField(max_digits=12, decimal_places=2)

@@ -3,54 +3,59 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 
-class SocialMedia(models.Model):
-    """
-    Model for storing social media profiles.
-    """
+class Company(models.Model):
     name = models.CharField(max_length=255)
-    url = models.URLField()
+    short_description = models.CharField(max_length=355)
+    phone = models.CharField(max_length=20)
+    website = models.URLField(blank=True)
 
-    class Meta:
-        verbose_name = "Social Media"
-        verbose_name_plural = "Social Medias"
+    logo = models.ImageField(upload_to='company/company-logos/', blank=True)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name
 
 
+class SocialMediaProfile(models.Model):
+    company = models.ForeignKey(
+        Company, related_name='social_media_profiles', on_delete=models.CASCADE)
+    platform = models.CharField(max_length=50, choices=[
+        ('X', 'X'),
+        ('YouTube', 'YouTube'),
+        ('Facebook', 'Facebook'),
+        ('Telegram', 'Telegram'),
+        ('Instagram', 'Instagram')
+    ])
+    icon = models.FileField(upload_to='company/social-media/')
+    url = models.URLField()
+
+    class Meta:
+        unique_together = ['company', 'platform']
+
+    @property
+    def icon_url(self):
+        if self.icon:
+            return f"{settings.HOST}{self.icon.url}"
+        return None
+
+
 class AppStoreLink(models.Model):
-    """
-    Model for storing links to mobile apps on the App Store and Google Play Store.
-    """
-    app_name = models.CharField(max_length=255)
-    ios_url = models.URLField(blank=True, null=True)
-    android_url = models.URLField(blank=True, null=True)
+    company = models.ForeignKey(
+        Company, related_name='app_links', on_delete=models.CASCADE)
+    platform = models.CharField(max_length=50, choices=[
+        ('iOS', 'iOS'),
+        ('Android', 'Android'),
+    ])
+    logo = models.FileField(upload_to='company/app-store/')
+    url = models.URLField()
 
     class Meta:
-        verbose_name = "App Store Link"
-        verbose_name_plural = "App Store Links"
+        unique_together = ['company', 'platform']
 
-    def __str__(self) -> str:
-        return self.app_name
-
-
-class CompanyInfo(models.Model):
-    """
-    Model for storing company information, including contact details and app links.
-    """
-    phone_number = models.CharField(max_length=20)
-
-    social_media = models.ManyToManyField(SocialMedia, blank=True)
-    app_links = models.ManyToManyField(AppStoreLink, blank=True)
-
-    logo = models.FileField(upload_to="company/logo")
-
-    class Meta:
-        verbose_name = "Company Info"
-        verbose_name_plural = "Company Info"
-
-    def __str__(self) -> str:
-        return "Company Info"
+    @property
+    def logo_url(self):
+        if self.logo:
+            return f"{settings.HOST}{self.logo.url}"
+        return None
 
 
 class Banner(models.Model):

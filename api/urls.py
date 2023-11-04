@@ -1,9 +1,8 @@
 from django.urls import path
 
-from apps.classifieds import views as classified_views
-from apps.user_searches import views as search_views
-from apps.likes import views as likes_views
 from apps.users import views as user_views
+from apps.likes import views as likes_views
+from apps.classifieds import views as classified_views
 from apps.site_settings import views as site_settings_views
 
 classified_urlpatterns = [
@@ -32,7 +31,6 @@ classified_urlpatterns = [
          classified_views.EditClassifiedImageView.as_view(), name='edit-classified-image'),
     path('classifieds/<int:pk>/details/edit/',
          classified_views.EditClassifiedDetailView.as_view(), name='edit-classified-detail'),
-    #     path('search/', search_views.SearchView.as_view(), name='search'),
 ]
 
 likes_urlpatterns = [
@@ -58,20 +56,18 @@ user_urlpatterns = [
 ]
 
 site_settings_urlpatterns = [
-    path('social-media/', site_settings_views.SocialMediaListCreateView.as_view(),
-         name='social-media-list-create'),
-    path('social-media/<int:pk>/', site_settings_views.SocialMediaDetailView.as_view(),
-         name='social-media-detail'),
+    path('appstore/', site_settings_views.AppStoreLinkListCreateView.as_view()),
+    path('appstore/<int:pk>/',
+         site_settings_views.AppStoreLinkRetrieveUpdateDestroyView.as_view()),
 
-    path('app-store-link/', site_settings_views.AppStoreLinkListCreateView.as_view(),
-         name='app-store-link-list-create'),
-    path('app-store-link/<int:pk>/',
-         site_settings_views.AppStoreLinkDetailView.as_view(), name='app-store-link-detail'),
+    path('socialmedia/', site_settings_views.SocialMediaProfileListCreateView.as_view()),
+    path('socialmedia/<int:pk>/',
+         site_settings_views.SocialMediaProfileRetrieveUpdateDestroyView.as_view()),
 
-    path('company-info/', site_settings_views.CompanyInfoListCreateView.as_view(),
-         name='company-info-list-create'),
-    path('company-info/<int:pk>/', site_settings_views.CompanyInfoDetailView.as_view(),
-         name='company-info-detail'),
+    path('company/', site_settings_views.CompanyListCreateView.as_view(),
+         name='company-list'),
+    path('company/<int:pk>/', site_settings_views.CompanyRetrieveUpdateDestroyView.as_view(),
+         name='company-detail'),
 
     path('banners/', site_settings_views.BannerListCreateView.as_view(),
          name='banner-list-create'),

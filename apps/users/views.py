@@ -4,16 +4,12 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie
 
-from drf_yasg.openapi import Schema, Response as SwaggerResponse
-from drf_yasg.utils import swagger_auto_schema
-
 from rest_framework.response import Response
 from rest_framework import permissions, status
-from rest_framework.schemas import ManualSchema
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework.generics import GenericAPIView, UpdateAPIView
+from rest_framework.generics import GenericAPIView, UpdateAPIView, RetrieveAPIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -102,20 +98,20 @@ class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
 
 
-class UserDataView(GenericAPIView):
+class UserDataView(RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserDataSerializer
+
+    def get_queryset(self):
+        if self.request is not None:
+            return User.objects.filter(self.request.user)
+        return User.objects.none()
 
     @method_decorator(cache_page(60*60*2))
     @method_decorator(vary_on_cookie)
     def get(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def get_queryset(self):
-        if self.request is not None:
-            return User.objects.filter(self.request.user)
-        return User.objects.none()
 
 
 class ChangeUserInformationView(UpdateAPIView):

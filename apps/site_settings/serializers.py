@@ -2,67 +2,60 @@ from rest_framework import serializers
 
 from .models import (
     Banner,
-    SocialMedia,
-    CompanyInfo,
-    AppStoreLink
+    Company,
+    AppStoreLink,
+    SocialMediaProfile
 )
 
 
-class SocialMediaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SocialMedia
-        fields = ['id', 'name', 'url']
-
-
-class AppStoreLinkSerializer(serializers.ModelSerializer):
-    appName = serializers.CharField(source='app_name')
-    iosUrl = serializers.URLField(source='ios_url')
-    androidUrl = serializers.URLField(source='android_url')
-
-    class Meta:
-        model = AppStoreLink
-        fields = ['id', 'appName', 'iosUrl', 'androidUrl']
-
-
-class CompanyInfoSerializer(serializers.ModelSerializer):
-    phoneNumber = serializers.CharField(source='phone_number')
-    socialMedia = SocialMediaSerializer(many=True, source='social_media')
-    appLinks = AppStoreLinkSerializer(many=True, source='app_links')
-    logoUrl = serializers.URLField(source='logo_url', read_only=True)
-
-    class Meta:
-        model = CompanyInfo
-        fields = ['id', 'phoneNumber', 'socialMedia',
-                  'appLinks', 'logoUrl', 'logo']
-
+class BaseSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         request = self.context.get('request')
 
-        if request and request.method == 'GET':
-            data.pop('logo', None)
-        elif request and request.method == 'POST' or 'PUT' or 'PATCH' or 'DELETE':
-            data.pop('logoUrl', None)
+        if request and request.method in ['POST', 'PUT', 'PATCH']:
+            for field in self.read_only_fields:
+                data.pop(field, None)
 
         return data
 
 
-class BannerSerializer(serializers.ModelSerializer):
-    shortDescription = serializers.CharField(source='short_description')
+class SocialMediaProfileSerializer(BaseSerializer):
+    iconUrl = serializers.URLField(source='icon_url', read_only=True)
+
+    class Meta:
+        model = SocialMediaProfile
+        fields = ['id', 'platform', 'url', 'icon', 'iconUrl']
+        read_only_fields = ['id', 'iconUrl']
+
+
+class AppStoreLinkSerializer(BaseSerializer):
+    logoUrl = serializers.URLField(source='logo_url', read_only=True)
+
+    class Meta:
+        model = AppStoreLink
+        fields = ['id', 'platform', 'url', 'logo', 'logoUrl']
+        read_only_fields = ['id', 'logoUrl']
+
+
+class CompanySerializer(BaseSerializer):
+    appLinks = AppStoreLinkSerializer(many=True, read_only=True)
+    socialMediaProfiles = SocialMediaProfileSerializer(
+        many=True, read_only=True)
+    logoUrl = serializers.URLField(source='logo_url', read_only=True)
+
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'phone', 'website', 'logo', 'logoUrl',
+                  'socialMediaProfiles', 'appLinks']
+        read_only_fields = ['id', 'logoUrl', 'appLinks', 'socialMediaProfiles']
+
+
+class BannerSerializer(BaseSerializer):
     imageUrl = serializers.URLField(source='image_url', read_only=True)
 
     class Meta:
         model = Banner
-        fields = ['id', 'title', 'shortDescription',
-                  'imageUrl', 'image', 'url']
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get('request')
-
-        if request and request.method == 'GET':
-            data.pop('image', None)
-        elif request and request.method == 'POST' or 'PUT' or 'PATCH' or 'DELETE':
-            data.pop('imageUrl', None)
-
-        return data
+        fields = ['id', 'title', 'short_description',
+                  'image', 'imageUrl', 'url']
+        read_only_fields = ['id', 'imageUrl']

@@ -24,27 +24,25 @@ class AdminLoginView(TokenObtainPairView):
     serializer_class = AdminLoginSerializer
 
 
+@method_decorator(cache_page(60*60*2), name='dispatch')
 class UserLoginView(GenericAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = UserLoginSerializer
 
-    @method_decorator(cache_page(60*60*2))
-    @method_decorator(vary_on_cookie)
     def post(self, request):
-        serializer = self.get_serializer_class(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
+@method_decorator(cache_page(60*60*2), name='dispatch')
 class VerifyApiView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = VerifyRequestSerializer
 
-    @method_decorator(cache_page(60*60*2))
-    @method_decorator(vary_on_cookie)
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer_class(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data['code']
         user = self.request.user
@@ -57,8 +55,6 @@ class VerifyApiView(GenericAPIView):
             }, status=200)
 
     @staticmethod
-    @method_decorator(cache_page(60*60*2))
-    @method_decorator(vary_on_cookie)
     def check_verify(user, code):
         verifies = user.verify_codes.filter(
             expiration_time__gte=datetime.now(), code=code, is_confirmed=False)
@@ -98,6 +94,7 @@ class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
 
 
+@method_decorator(cache_page(60*60*2), name='dispatch')
 class UserDataView(RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserDataSerializer
@@ -107,20 +104,17 @@ class UserDataView(RetrieveAPIView):
             return User.objects.filter(self.request.user)
         return User.objects.none()
 
-    @method_decorator(cache_page(60*60*2))
-    @method_decorator(vary_on_cookie)
     def get(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@method_decorator(cache_page(60*60*2), name='dispatch')
 class ChangeUserInformationView(UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChangeUserInformationSerializer
     http_method_names = ['patch', 'put']
 
-    @method_decorator(cache_page(60*60*2))
-    @method_decorator(vary_on_cookie)
     def get_object(self):
         return self.request.user
 

@@ -1,9 +1,10 @@
 import uuid
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -82,7 +83,7 @@ class UserConfirmation(models.Model):
         Override the save method to set expiration time for phone verification codes.
         """
         if not self.pk:
-            self.expiration_time = datetime.now() + timedelta(minutes=PHONE_EXPIRE)
+            self.expiration_time = timezone.now() + timedelta(minutes=PHONE_EXPIRE)
         super(UserConfirmation, self).save(*args, **kwargs)
 
 

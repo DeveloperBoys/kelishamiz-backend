@@ -1,8 +1,10 @@
+from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 
 from rest_framework.filters import SearchFilter
 from rest_framework import generics, permissions
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -18,6 +20,7 @@ from .serializers import (
     ClassifiedImageSerializer,
     CreateClassifiedSerializer,
     DeleteClassifiedSerializer,
+    CreateClassifiedImageSerializer,
     CreateClassifiedDetailSerializer
 )
 
@@ -107,7 +110,7 @@ class CreateClassifiedView(generics.CreateAPIView):
 
 @method_decorator(cache_page(60*15), name='dispatch')
 class CreateClassifiedImageView(generics.CreateAPIView):
-    serializer_class = ClassifiedImageSerializer
+    serializer_class = CreateClassifiedImageSerializer
     permission_classes = [permissions.IsAuthenticated,
                           ClassifiedOwner, DraftClassifiedPermission]
 
@@ -117,6 +120,11 @@ class CreateClassifiedImageView(generics.CreateAPIView):
         except:
             return None
 
+    def perform_create(self, serializer):
+        classified = get_object_or_404(Classified, pk=self.kwargs['pk'])
+        serializer.context['classified'] = classified
+        serializer.save()
+
 
 @method_decorator(cache_page(60*15), name='dispatch')
 class CreateClassifiedDetailView(generics.CreateAPIView):
@@ -125,7 +133,14 @@ class CreateClassifiedDetailView(generics.CreateAPIView):
                           ClassifiedOwner, DraftClassifiedPermission]
 
     def get_queryset(self):
-        return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+        try:
+            return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+        except:
+            return None
+
+    def perform_create(self, serializer):
+        classified = get_object_or_404(Classified, pk=self.kwargs['pk'])
+        return serializer.save(classified=classified)
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
@@ -148,7 +163,18 @@ class EditClassifiedImageView(generics.RetrieveUpdateDestroyAPIView):
                           ClassifiedOwner, PublishedClassifiedPermission]
 
     def get_queryset(self):
-        return ClassifiedImage.objects.filter(classified__owner=self.request.user)
+        try:
+            return ClassifiedImage.objects.filter(classified__owner=self.request.user)
+        except:
+            return None
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(ClassifiedImage, pk=pk)
+
+    def check_object_permissions(self, request, obj):
+        if not request.user.has_perm('can_edit_classified', obj.classified):
+            raise PermissionDenied()
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
@@ -158,4 +184,15 @@ class EditClassifiedDetailView(generics.RetrieveUpdateDestroyAPIView):
                           ClassifiedOwner, PublishedClassifiedPermission]
 
     def get_queryset(self):
-        return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+        try:
+            return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+        except:
+            return None
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(ClassifiedDetail, classified__pk=pk)
+
+    def check_object_permissions(self, request, obj):
+        if not request.user.has_perm('can_edit_classified', obj.classified):
+            raise PermissionDenied()

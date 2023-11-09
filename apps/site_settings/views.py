@@ -5,12 +5,14 @@ from apps.permissions.permissions import IsAdminOrReadOnly
 from .models import (
     Banner,
     Company,
+    Locations,
     AppStoreLink,
     SocialMediaProfile
 )
 from .serializers import (
     BannerSerializer,
     CompanySerializer,
+    LocationSerializer,
     AppStoreLinkSerializer,
     SocialMediaProfileSerializer
 )
@@ -61,4 +63,16 @@ class BannerListCreateView(generics.ListCreateAPIView):
 class BannerDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Banner.objects.all()
     serializer_class = BannerSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class LocationListView(generics.ListCreateAPIView):
+    queryset = Locations.objects.all()
+    serializer_class = LocationSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class LocationView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Locations.objects.all()
+    serializer_class = LocationSerializer
     permission_classes = [IsAdminOrReadOnly]

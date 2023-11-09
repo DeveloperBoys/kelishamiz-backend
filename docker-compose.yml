@@ -6,6 +6,7 @@ services:
     image: backend
     volumes:
       - static:/static
+      - media:/app/config/media
     env_file:
       - .env
     networks:
@@ -24,7 +25,7 @@ services:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
-      - dbdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     networks:
       - backend
 
@@ -58,6 +59,7 @@ services:
 volumes:
   pgdata:
   static:
+  media:
 
 
 networks:

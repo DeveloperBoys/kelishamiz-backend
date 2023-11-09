@@ -14,6 +14,12 @@ class Company(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def logo_url(self):
+        if self.logo:
+            return f"{settings.HOST}{self.logo.url}"
+        return None
+
 
 class SocialMediaProfile(models.Model):
     company = models.ForeignKey(
@@ -79,3 +85,13 @@ class Banner(models.Model):
         if self.image:
             return f"{settings.HOST}{self.image.url}"
         return None
+
+
+class Locations(models.Model):
+    name = models.CharField(max_length=150)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Location"
+        verbose_name_plural = "Locations"

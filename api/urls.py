@@ -73,6 +73,11 @@ site_settings_urlpatterns = [
          name='banner-list-create'),
     path('banners/<int:pk>/',
          site_settings_views.BannerDetailView.as_view(), name='banner-detail'),
+
+    path('locations/', site_settings_views.LocationListView.as_view(),
+         name='locations-list-create'),
+    path('locations/<int:pk>', site_settings_views.LocationView.as_view(),
+         name='locations-detail'),
 ]
 
 urlpatterns = (classified_urlpatterns + likes_urlpatterns +

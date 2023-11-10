@@ -207,7 +207,7 @@ class CreateClassifiedSerializer(serializers.ModelSerializer):
 
 
 class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
-    dynamicFields = DynamicFieldSerializer(many=True)
+    dynamicFields = DynamicFieldSerializer(many=True, write_only=True)
 
     class Meta:
         model = ClassifiedDetail
@@ -216,13 +216,12 @@ class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'classified')
 
     def create(self, validated_data):
-
-        dynamic_fields = validated_data.pop('dynamicFields')
+        dynamic_fields_data = validated_data.pop('dynamicFields')
         classified_detail = ClassifiedDetail.objects.create(**validated_data)
 
-        for dynamic_field in dynamic_fields:
+        for dynamic_field_data in dynamic_fields_data:
             DynamicField.objects.create(
-                classified_detail=classified_detail, **dynamic_field)
+                classified_detail=classified_detail, **dynamic_field_data)
 
         return classified_detail
 

@@ -250,26 +250,22 @@ class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
 
 class CreateClassifiedImageSerializer(serializers.ModelSerializer):
 
-    images = serializers.ListField(
-        child=serializers.ImageField()
-    )
-
     class Meta:
         model = ClassifiedImage
-        fields = ('classified', 'images')
-        read_only_fields = ('classified',)
+        fields = ('id',)
+        read_only_fields = ('id',)
 
     def create(self, validated_data):
-        images = validated_data.pop('images')
-        classified_images = []
+        classified = validated_data['classified']
+        images_data = validated_data.pop('images')
 
-        for image in images:
-            classified_image = ClassifiedImage(
-                classified=self.context['classified'], image=image)
-            classified_images.append(classified_image)
+        imgs = [
+            ClassifiedImage(classified=classified, image=img)
+            for img in images_data
+        ]
+        data = ClassifiedImage.objects.bulk_create(imgs)
 
-        ClassifiedImage.objects.bulk_create(classified_images)
-        return self.context['classified']
+        return data
 
     def update(self, instance, validated_data):
         instance.image = validated_data.get('image', instance.image)

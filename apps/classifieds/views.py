@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 
 from rest_framework.filters import SearchFilter
 from rest_framework import generics, permissions
+from rest_framework.parsers import MultiPartParser
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 
@@ -122,8 +123,8 @@ class CreateClassifiedImageView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         classified = get_object_or_404(Classified, pk=self.kwargs['pk'])
-        serializer.context['classified'] = classified
-        serializer.save()
+        images = self.request.FILES
+        serializer.save(classified=classified, images=images)
 
 
 @method_decorator(cache_page(60*15), name='dispatch')

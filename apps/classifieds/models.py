@@ -91,7 +91,7 @@ class ClassifiedImage(Base):
     """
     ClassifiedImage model to associate images with classifieds.
     """
-    classified = models.ForeignKey(Classified, related_name='classifiedimage_set',
+    classified = models.ForeignKey(Classified, related_name='images',
                                    on_delete=models.CASCADE)
     image = models.ImageField(upload_to='classifieds/images/')
 

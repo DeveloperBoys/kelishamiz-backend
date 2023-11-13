@@ -1,5 +1,3 @@
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework import viewsets, permissions
 
@@ -8,13 +6,18 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .filters import UserFilter
 from apps.users.models import User
 from apps.classifieds.models import Classified
+from .filters import UserFilter, ClassifiedFilter
 from apps.user_searches.models import SearchQuery
 from apps.user_searches.serializers import SearchQuerySerializer
-from .serializers import UsersSerializer, UsersListSerializer, AdminLoginSerializer
-from apps.classifieds.serializers import ClassifiedListSerializer, ClassifiedSerializer
+from .serializers import (
+    UsersSerializer,
+    UsersListSerializer,
+    AdminLoginSerializer,
+    UserClassifiedsSerializer,
+    UserClassifiedListSerializer
+)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -29,6 +32,19 @@ class UsersViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return UsersSerializer
+        return self.serializer_class
+
+
+class UserClassifiedsViewSet(viewsets.ModelViewSet):
+    queryset = Classified.objects.all()
+    serializer_class = UserClassifiedListSerializer
+    permission_classes = [permissions.IsAdminUser,]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = ClassifiedFilter
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return UserClassifiedsSerializer
         return self.serializer_class
 
 
@@ -50,7 +66,7 @@ class AdminLoginView(TokenObtainPairView):
 
 
 class ClassifiedsViewSet(viewsets.ModelViewSet):
-    serializer_class = ClassifiedListSerializer
+    serializer_class = UserClassifiedListSerializer
     http_method_names = ['get', 'put', 'patch', 'delete']
     permission_classes = [permissions.IsAdminUser,]
 
@@ -65,5 +81,28 @@ class ClassifiedsViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
-            return ClassifiedSerializer
+            return UserClassifiedsSerializer
+        return self.serializer_class
+
+
+class LikedClassifiedsViewSet(viewsets.ModelViewSet):
+    serializer_class = UserClassifiedListSerializer
+    http_method_names = ['get', 'put', 'patch', 'delete']
+    permission_classes = [permissions.IsAdminUser,]
+
+    def get_queryset(self):
+        try:
+            user = self.kwargs['user_pk']
+            if user:
+                return Classified.objects.filter(
+                    classifiedlike__user=user,
+                    classifiedlike__is_active=True
+                ).prefetch_related('classifiedlike_set')
+            return None
+        except:
+            return None
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return UserClassifiedsSerializer
         return self.serializer_class

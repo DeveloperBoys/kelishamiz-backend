@@ -3,6 +3,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from django.contrib.auth import authenticate
+from apps.classifieds.models import Classified, ClassifiedDetail, ClassifiedImage
+from apps.classifieds.serializers import ClassifiedDetailSerializer
 
 from config.utility import check_user_type
 
@@ -96,3 +98,65 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = ['id', 'fistName', 'lastName', 'isActive', 'fatherName', 'phoneNumber', 'email',
                   'birthDate', 'profileImageUrl', 'profileImage', 'userRoles', 'authType', 'dateJoined']
         read_only_fields = ['id',]
+
+
+class UserClassifiedsSerializer(serializers.ModelSerializer):
+    detail = ClassifiedDetailSerializer()
+    createdAt = serializers.DateTimeField(source='created_at')
+    updatedAt = serializers.DateTimeField(source='updated_at')
+    category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Classified
+        fields = ('id', 'title', 'category', 'status',
+                  'detail', 'createdAt', 'updatedAt')
+        read_only_fields = ('id',)
+
+    def get_category(self, obj):
+        request = self.context.get('request')
+        if request and request.method == 'GET':
+            return obj.category.name
+        return obj.category.pk
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.category.pk = validated_data.get(
+            'category', instance.category.pk)
+        instance.save()
+
+        detail_data = validated_data.get('detail', {})
+        detail_serializer = ClassifiedDetailSerializer(
+            instance=instance.classifieddetail, data=detail_data, partial=True
+        )
+        if detail_serializer.is_valid():
+            detail_serializer.save()
+
+        return instance
+
+
+class UserClassifiedListSerializer(serializers.ModelSerializer):
+    imageUrl = serializers.SerializerMethodField(read_only=True)
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+    category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Classified
+        fields = ('id', 'category', 'owner', 'title',
+                  'status', 'imageUrl', 'createdAt')
+        read_only_fields = ('id',)
+
+    def get_price(self, obj):
+        classified_detail = ClassifiedDetail.objects.filter(
+            classified=obj).first()
+        return classified_detail.price if classified_detail else None
+
+    def get_category(self, obj):
+        request = self.context.get('request')
+        if request and request.method == 'GET':
+            return obj.category.name
+        return obj.category.pk
+
+    def get_imageUrl(self, obj):
+        classified_image = ClassifiedImage.objects.filter(
+            classified=obj).first()
+        return classified_image.image_url if classified_image else None

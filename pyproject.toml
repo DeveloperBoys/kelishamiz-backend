@@ -20,6 +20,7 @@ django-filter = "^23.3"
 django-cors-headers = "^4.3.0"
 celery = "^5.3.4"
 psycopg2-binary = "^2.9.9"
+drf-nested-routers = "^0.93.4"
 
 
 [build-system]

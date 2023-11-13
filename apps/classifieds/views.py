@@ -10,10 +10,21 @@ from rest_framework.pagination import PageNumberPagination
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.permissions.permissions import PublishedClassifiedPermission, ClassifiedOwner, IsAdminOrReadOnly, DraftClassifiedPermission
-from .models import Category, Classified, ClassifiedImage, ClassifiedDetail, APPROVED
-from apps.user_searches.models import SearchQuery
 from .filters import ClassifiedFilter
+from apps.user_searches.models import SearchQuery
+from .models import (
+    APPROVED,
+    Category,
+    Classified,
+    ClassifiedImage,
+    ClassifiedDetail,
+)
+from apps.permissions.permissions import (
+    ClassifiedOwner,
+    IsAdminOrReadOnly,
+    DraftClassifiedPermission,
+    PublishedClassifiedPermission
+)
 from .serializers import (
     CategorySerializer,
     ClassifiedListSerializer,

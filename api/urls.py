@@ -1,7 +1,9 @@
-from django.urls import path
+from django.urls import include, path
 
 from apps.users import views as user_views
 from apps.likes import views as likes_views
+from admin_profile import views as admin_views
+from admin_profile.urls import admin_router, user_router
 from apps.classifieds import views as classified_views
 from apps.site_settings import views as site_settings_views
 
@@ -21,14 +23,14 @@ classified_urlpatterns = [
          classified_views.DeleteClassifiedView.as_view(), name='delete-classified'),
     path('classifieds/create/', classified_views.CreateClassifiedView.as_view(),
          name='create-classified'),
-    path('classifieds/<int:pk>/images/create/',
-         classified_views.CreateClassifiedImageView.as_view(), name='create-classified-image'),
-    path('classifieds/<int:pk>/details/create/',
-         classified_views.CreateClassifiedDetailView.as_view(), name='create-classified-detail'),
     path('classifieds/<int:pk>/edit/',
          classified_views.EditClassifiedView.as_view(), name='edit-classified'),
+    path('classifieds/<int:pk>/images/create/',
+         classified_views.CreateClassifiedImageView.as_view(), name='create-classified-image'),
     path('classifieds/<int:pk>/images/edit/',
          classified_views.EditClassifiedImageView.as_view(), name='edit-classified-image'),
+    path('classifieds/<int:pk>/details/create/',
+         classified_views.CreateClassifiedDetailView.as_view(), name='create-classified-detail'),
     path('classifieds/<int:pk>/details/edit/',
          classified_views.EditClassifiedDetailView.as_view(), name='edit-classified-detail'),
 ]
@@ -43,16 +45,26 @@ likes_urlpatterns = [
 
 
 user_urlpatterns = [
-    path('admin/login/', user_views.AdminLoginView.as_view(), name='admin-login'),
     path('login', user_views.UserLoginView.as_view(), name='user-login'),
     path('login/verify/', user_views.VerifyApiView.as_view(),
          name='phone_number_verify'),
     path('login/refresh/', user_views.CustomTokenRefreshView.as_view(),
          name='token_refresh'),
     path('logout/', user_views.LogoutView.as_view(), name='logout'),
-    path('user/data/', user_views.UserDataView.as_view(), name='user_data'),
+    path('user/data/', user_views.UserDataView.as_view(), name='user-data'),
+    path('user/searches/', user_views.UserSearchesView.as_view(),
+         name='user-searches'),
+    path('user/classifieds/', user_views.UserClassifiedsView.as_view(),
+         name='user-classifieds'),
     path('user/change-information/', user_views.ChangeUserInformationView.as_view(),
          name='change_user_information'),
+]
+
+
+admin_urlpatterns = [
+    path('admin/', include(admin_router.urls), name="admin-users"),
+    path('admin/', include(user_router.urls)),
+    path('admin/login/', admin_views.AdminLoginView.as_view(), name='admin-login'),
 ]
 
 site_settings_urlpatterns = [
@@ -81,4 +93,4 @@ site_settings_urlpatterns = [
 ]
 
 urlpatterns = (classified_urlpatterns + likes_urlpatterns +
-               user_urlpatterns + site_settings_urlpatterns)
+               user_urlpatterns + admin_urlpatterns + site_settings_urlpatterns)

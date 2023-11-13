@@ -25,6 +25,7 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
+    'admin_profile.apps.AdminConfig',
     'apps.likes.apps.LikesConfig',
     'apps.users.apps.UsersConfig',
     'apps.promotions.apps.PromotionsConfig',

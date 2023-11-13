@@ -5,23 +5,25 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie
 
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework.generics import GenericAPIView, UpdateAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView, UpdateAPIView, RetrieveAPIView, ListAPIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
+from apps.classifieds.models import Classified
+from apps.classifieds.serializers import ClassifiedListSerializer, ClassifiedSerializer
+
+from apps.user_searches.models import SearchQuery
+from apps.user_searches.serializers import SearchQuerySerializer
 
 
 from .models import User
 from .serializers import (ChangeUserInformationSerializer, UserLoginSerializer, VerifyRequestSerializer,
-                          AdminLoginSerializer, LogoutSerializer, UserDataSerializer, CustomTokenRefreshSerializer)
-
-
-class AdminLoginView(TokenObtainPairView):
-    serializer_class = AdminLoginSerializer
+                          LogoutSerializer, UserDataSerializer, CustomTokenRefreshSerializer)
 
 
 @method_decorator(cache_page(60*60*2), name='dispatch')
@@ -94,7 +96,7 @@ class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
 
 
-@method_decorator(cache_page(60*60*2), name='dispatch')
+# @method_decorator(cache_page(60*60*2), name='dispatch')
 class UserDataView(RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserDataSerializer
@@ -107,6 +109,59 @@ class UserDataView(RetrieveAPIView):
     def get(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['GET'], url_path="searches/", url_name="user-searches")
+    def user_searches(self, request, pk):
+        obj = SearchQuery.objects.filter(user_id=pk)
+
+        if obj.exists():
+            return Response(SearchQuerySerializer(obj, many=True).data)
+
+        return Response([])
+
+    @action(detail=True, url_path="classifieds", url_name="user-classifieds")
+    def user_classifieds(self, request, pk):
+        obj = Classified.objects.filter(owner_id=pk)
+
+        if obj.exists():
+            return Response(ClassifiedListSerializer(obj, many=True).data)
+
+        return Response([])
+
+    @action(detail=True, url_path="classifieds/<int:pk>")
+    def user_classifieds(self, request, pk):
+        obj = Classified.objects.filter(pk=pk).last()
+
+        if obj:
+            return Response(ClassifiedSerializer(obj, many=True).data)
+
+        return Response([])
+
+
+class UserSearchesView(ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SearchQuerySerializer
+    http_method_names = ['get', 'delete']
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user:
+            return SearchQuery.objects.filter(user=user)
+        return []
+
+
+class UserClassifiedsView(ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ClassifiedListSerializer
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user:
+            return Classified.objects.filter(owner=user)
+        return []
 
 
 @method_decorator(cache_page(60*60*2), name='dispatch')

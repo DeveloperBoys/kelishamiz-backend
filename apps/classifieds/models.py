@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+from apps.site_settings.models import Locations
+
 from .base import Base
 
 
@@ -81,6 +83,7 @@ class ClassifiedDetail(Base):
     price = models.DecimalField(max_digits=12, decimal_places=2)
     is_negotiable = models.BooleanField(default=False)
     description = models.TextField()
+    location = models.OneToOneField(Locations, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = "Classified Detail"

@@ -95,6 +95,17 @@ class BannerSerializer(serializers.ModelSerializer):
                   'image', 'imageUrl', 'url']
         read_only_fields = ['id',]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+
+        if request and request.method != 'GET':
+            data.pop('imageUrl', None)
+        else:
+            data.pop('image', None)
+
+        return data
+
 
 class LocationSerializer(serializers.ModelSerializer):
 

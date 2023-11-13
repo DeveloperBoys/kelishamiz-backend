@@ -1,14 +1,15 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from .models import (
+    DRAFT,
+    PENDING,
+    DELETED,
     Category,
     Classified,
     DynamicField,
     ClassifiedImage,
     ClassifiedDetail,
-    PENDING,
-    DRAFT,
-    DELETED
 )
 
 
@@ -100,7 +101,7 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassifiedDetail
         fields = ('currencyType', 'price', 'description',
-                  'dynamicFields', 'images')
+                  'dynamicFields', 'location', 'images')
 
     def get_dynamicFields(self, obj):
         dynamic_fields = DynamicField.objects.filter(classified_detail=obj)
@@ -140,7 +141,7 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
 
 
 class ClassifiedSerializer(serializers.ModelSerializer):
-    detail = ClassifiedDetailSerializer(source='classifieddetail')
+    detail = ClassifiedDetailSerializer()
     isLiked = serializers.BooleanField(source='is_liked')
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     category = serializers.SerializerMethodField()
@@ -162,7 +163,7 @@ class ClassifiedSerializer(serializers.ModelSerializer):
             'category', instance.category.pk)
         instance.save()
 
-        detail_data = validated_data.get('classifieddetail', {})
+        detail_data = validated_data.get('detail', {})
         detail_serializer = ClassifiedDetailSerializer(
             instance=instance.classifieddetail, data=detail_data, partial=True
         )
@@ -212,16 +213,21 @@ class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassifiedDetail
         fields = ('id', 'classified', 'currency_type', 'price',
-                  'is_negotiable', 'description', 'dynamicFields')
+                  'is_negotiable', 'description', 'location', 'dynamicFields')
         read_only_fields = ('id', 'classified')
 
     def create(self, validated_data):
         dynamic_fields_data = validated_data.pop('dynamicFields')
+        classified = get_object_or_404(
+            Classified, pk=validated_data['classified'])
         classified_detail = ClassifiedDetail.objects.create(**validated_data)
 
         for dynamic_field_data in dynamic_fields_data:
             DynamicField.objects.create(
                 classified_detail=classified_detail, **dynamic_field_data)
+
+        classified.status = PENDING
+        classified.save()
 
         return classified_detail
 

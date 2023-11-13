@@ -122,6 +122,7 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
     imageUrl = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     isLiked = serializers.BooleanField(source='is_liked')
+    category = serializers.SerializerMethodField()
 
     class Meta:
         model = Classified
@@ -133,6 +134,12 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
         classified_detail = ClassifiedDetail.objects.filter(
             classified=obj).first()
         return classified_detail.price if classified_detail else None
+
+    def get_category(self, obj):
+        request = self.context.get('request')
+        if request and request.method == 'GET':
+            return obj.category.name
+        return obj.category.pk
 
     def get_imageUrl(self, obj):
         classified_image = ClassifiedImage.objects.filter(

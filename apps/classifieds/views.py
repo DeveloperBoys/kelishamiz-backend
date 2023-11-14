@@ -1,10 +1,17 @@
+import memcache
+import threading
+
+from PIL import Image
+from io import BytesIO
+
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+from django.core.files.uploadedfile import SimpleUploadedFile
 
+from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework import generics, permissions
-from rest_framework.parsers import MultiPartParser
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 
@@ -35,6 +42,9 @@ from .serializers import (
     CreateClassifiedImageSerializer,
     CreateClassifiedDetailSerializer
 )
+
+
+memcache_client = memcache.Client(['127.0.0.1:11211'])
 
 
 class ClassifiedPagination(PageNumberPagination):
@@ -89,7 +99,11 @@ class ClassifiedListView(generics.ListAPIView):
             queryset = self.queryset[8:]
 
         page = self.paginate_queryset(queryset)
-        serializer = self.serializer_class(page, many=True)
+        serializer = self.serializer_class(
+            page,
+            many=True,
+            context={'request': request}
+        )
         return self.get_paginated_response(serializer.data)
 
 
@@ -115,7 +129,7 @@ class CreateClassifiedView(generics.CreateAPIView):
 
     def get_queryset(self):
         try:
-            return Classified.objects.filter(classified__owner=self.request.user)
+            return Classified.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
 
@@ -128,14 +142,50 @@ class CreateClassifiedImageView(generics.CreateAPIView):
 
     def get_queryset(self):
         try:
-            return ClassifiedImage.objects.filter(classified__owner=self.request.user)
+            return ClassifiedImage.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
 
-    def perform_create(self, serializer):
-        classified = get_object_or_404(Classified, pk=self.kwargs['pk'])
-        images = self.request.FILES
-        serializer.save(classified=classified, images=images)
+    def post(self, request, pk):
+
+        classified = memcache_client.get(f'classified-{pk}')
+        if not classified:
+            classified = Classified.objects.prefetch_related(
+                'classifiedimage_set').get(pk=pk)
+            memcache_client.set(f'classified-{pk}', classified)
+
+        uploaded_files = [SimpleUploadedFile(f.name, f.read())
+                          for f in request.FILES.getlist('images')]
+
+        batch = []
+
+        def upload_file(uploaded_file):
+            if uploaded_file.size > 4*1024*1024:
+                output = BytesIO()
+                Image.open(uploaded_file).convert('RGB').save(
+                    output, format='JPEG', optimize=True, quality=85)
+                output.seek(0)
+                uploaded_file = SimpleUploadedFile(
+                    uploaded_file.name, output.read())
+
+            image = ClassifiedImage(classified=classified, image=uploaded_file)
+            batch.append(image)
+
+            from django.db import connection
+            connection.close()
+
+        threads = []
+        for uploaded_file in uploaded_files:
+            thread = threading.Thread(target=upload_file, args=[uploaded_file])
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        ClassifiedImage.objects.bulk_create(batch)
+
+        return Response(status=204)
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
@@ -146,7 +196,7 @@ class CreateClassifiedDetailView(generics.CreateAPIView):
 
     def get_queryset(self):
         try:
-            return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+            return ClassifiedDetail.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
 
@@ -163,7 +213,7 @@ class EditClassifiedView(generics.UpdateAPIView):
 
     def get_queryset(self):
         try:
-            return Classified.objects.filter(classified__owner=self.request.user)
+            return Classified.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
 
@@ -176,7 +226,7 @@ class EditClassifiedImageView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         try:
-            return ClassifiedImage.objects.filter(classified__owner=self.request.user)
+            return ClassifiedImage.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
 
@@ -197,7 +247,7 @@ class EditClassifiedDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         try:
-            return ClassifiedDetail.objects.filter(classified__owner=self.request.user)
+            return ClassifiedDetail.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
 

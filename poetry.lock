@@ -738,6 +738,20 @@ files = [
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "python-memcached"
+version = "1.59"
+description = "Pure python memcached client"
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-memcached-1.59.tar.gz", hash = "sha256:a2e28637be13ee0bf1a8b6843e7490f9456fd3f2a4cb60471733c7b5d5557e4f"},
+    {file = "python_memcached-1.59-py2.py3-none-any.whl", hash = "sha256:4dac64916871bd3550263323fc2ce18e1e439080a2d5670c594cf3118d99b594"},
+]
+
+[package.dependencies]
+six = ">=1.4.0"
+
+[[package]]
 name = "pytz"
 version = "2023.3"
 description = "World timezone definitions, modern and historical"
@@ -910,4 +924,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "641a0961a5856daf38bdec062ff0470eb555e9053a20caf5bec8ee6ef751ae0d"
+content-hash = "b4989a56189e27ead1f22753225ca306eec818d4f84c6fdc907ad26054a64dc6"

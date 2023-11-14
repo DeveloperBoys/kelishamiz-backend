@@ -1,12 +1,16 @@
 from decouple import config
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG")
 
 ALLOWED_HOSTS = []
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}
 
 DATABASES = {
     "default": {

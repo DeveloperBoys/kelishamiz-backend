@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+
 from rest_framework import serializers
 
 from .models import (
@@ -39,11 +40,11 @@ class CategorySerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         request = self.context.get('request')
 
-        if request and request.method == 'GET':
+        if request and request.method != 'GET':
+            data.pop('iconUrl', None)
+        else:
             data.pop('icon', None)
             data.pop('parent', None)
-        elif request and request.method == 'POST' or 'PUT' or 'PATCH' or 'DELETE':
-            data.pop('iconUrl', None)
 
         return data
 
@@ -60,17 +61,17 @@ class ClassifiedImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClassifiedImage
-        fields = ('id', 'classified', 'image', 'imageUrl',)
+        fields = ('id', 'image', 'imageUrl',)
         read_only_fields = ('id',)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         request = self.context.get('request')
-
-        if request and request.method == 'GET':
-            data.pop('image', None)
-        elif request and request.method == 'POST' or 'PUT' or 'PATCH' or 'DELETE':
+        print(request.method)
+        if request and request.method != 'GET':
             data.pop('imageUrl', None)
+        else:
+            data.pop('image', None)
 
         return data
 
@@ -97,6 +98,7 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
     currencyType = serializers.CharField(source='currency_type')
     dynamicFields = serializers.SerializerMethodField(source='dynamic_fields')
     images = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
 
     class Meta:
         model = ClassifiedDetail
@@ -109,6 +111,12 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
             return DynamicFieldSerializer(dynamic_fields, many=True).data
         return None
 
+    def get_location(self, obj):
+        request = self.context.get('request')
+        if request and request.method == 'GET':
+            return obj.location.name
+        return obj.location.pk
+
     def get_images(self, obj):
         images = ClassifiedImage.objects.filter(classified=obj.classified)
         if images.exists():
@@ -119,14 +127,14 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
 
 class ClassifiedListSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField(read_only=True)
-    imageUrl = serializers.SerializerMethodField(read_only=True)
+    images = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     isLiked = serializers.BooleanField(source='is_liked')
     category = serializers.SerializerMethodField()
 
     class Meta:
         model = Classified
-        fields = ('id', 'category', 'owner', 'title', 'imageUrl',
+        fields = ('id', 'category', 'owner', 'title', 'images',
                   'price', 'isLiked', 'createdAt')
         read_only_fields = ('id',)
 
@@ -141,10 +149,12 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
             return obj.category.name
         return obj.category.pk
 
-    def get_imageUrl(self, obj):
-        classified_image = ClassifiedImage.objects.filter(
-            classified=obj).first()
-        return classified_image.image_url if classified_image else None
+    def get_images(self, obj):
+        images = ClassifiedImage.objects.filter(classified=obj)
+        if images.exists():
+            request = self.context.get('request')
+            return ClassifiedImageSerializer(images, many=True, context={'request': request}).data
+        return None
 
 
 class ClassifiedSerializer(serializers.ModelSerializer):
@@ -266,18 +276,6 @@ class CreateClassifiedImageSerializer(serializers.ModelSerializer):
         model = ClassifiedImage
         fields = ('id',)
         read_only_fields = ('id',)
-
-    def create(self, validated_data):
-        classified = validated_data['classified']
-        images_data = validated_data.pop('images')
-
-        imgs = [
-            ClassifiedImage(classified=classified, image=img)
-            for img in images_data
-        ]
-        data = ClassifiedImage.objects.bulk_create(imgs)
-
-        return data
 
     def update(self, instance, validated_data):
         instance.image = validated_data.get('image', instance.image)

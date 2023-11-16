@@ -9,7 +9,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import BaseUserManager
 
-from rest_framework_simplejwt.tokens import RefreshToken
+# from rest_framework_simplejwt.tokens import RefreshToken
 
 # from .managers import UserManager
 from .constants import VIA_PHONE, VIA_SOCIAL, ORDINARY_USER, MANAGER, SUPER_USER
@@ -173,11 +173,12 @@ class User(AbstractUser, BaseModel):
         """
         Generate JWT tokens for the user.
         """
-        refresh = RefreshToken.for_user(self)
-        return {
-            "access": str(refresh.access_token),
-            "refresh": str(refresh)
-        }
+        # refresh = RefreshToken.for_user(self)
+        # return {
+        #     "access": str(refresh.access_token),
+        #     "refresh": str(refresh)
+        # }
+        return None
 
     def save(self, *args, **kwargs):
         """

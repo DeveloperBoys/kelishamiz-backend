@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils.text import slugify
 from django.contrib.auth import get_user_model
 
 from apps.site_settings.models import Locations
@@ -22,12 +23,18 @@ class Category(Base):
     name = models.CharField(max_length=250)
     parent = models.ForeignKey(
         'self', on_delete=models.CASCADE, related_name='children', null=True, blank=True)
+    slug = models.SlugField(max_length=250, unique=True, blank=True, null=True)
     icon = models.FileField(
         upload_to='classifieds/category/icons/', null=True, blank=True)
 
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -56,6 +63,7 @@ class Classified(Base):
     status = models.CharField(
         max_length=8, db_index=True, choices=CLASSIFIED_STATUS, default=DRAFT)
     title = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=250, blank=True, null=True)
     is_liked = models.BooleanField(default=False)
 
     class Meta:
@@ -64,6 +72,11 @@ class Classified(Base):
 
     def __str__(self) -> str:
         return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
     def can_edit(self):
         return self.status == DRAFT
@@ -83,11 +96,17 @@ class ClassifiedDetail(Base):
     price = models.DecimalField(max_digits=12, decimal_places=2)
     is_negotiable = models.BooleanField(default=False)
     description = models.TextField()
-    location = models.OneToOneField(Locations, on_delete=models.CASCADE)
+    location = models.ForeignKey(Locations, on_delete=models.CASCADE)
 
     class Meta:
+        unique_together = []
         verbose_name = "Classified Detail"
         verbose_name_plural = "Classified Details"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
 
 class ClassifiedImage(Base):

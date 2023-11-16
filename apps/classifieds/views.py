@@ -81,7 +81,7 @@ class ClassifiedListView(generics.ListAPIView):
         queryset = super().filter_queryset(queryset)
 
         search_query = self.request.query_params.get('search')
-        if search_query and self.request.user.is_authenticated:
+        if search_query and self.request.user:
             SearchQuery.objects.create(
                 user=self.request.user,
                 query=search_query
@@ -90,13 +90,7 @@ class ClassifiedListView(generics.ListAPIView):
         return queryset
 
     def list(self, request):
-        page = request.query_params.get('page')
-
-        if not page:
-            queryset = self.queryset[:8]
-        else:
-            self.pagination = self.pagination_class
-            queryset = self.queryset[8:]
+        queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
         serializer = self.serializer_class(
@@ -151,7 +145,7 @@ class CreateClassifiedImageView(generics.CreateAPIView):
         classified = memcache_client.get(f'classified-{pk}')
         if not classified:
             classified = Classified.objects.prefetch_related(
-                'classifiedimage_set').get(pk=pk)
+                'images').get(pk=pk)
             memcache_client.set(f'classified-{pk}', classified)
 
         uploaded_files = [SimpleUploadedFile(f.name, f.read())

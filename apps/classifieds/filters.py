@@ -6,13 +6,16 @@ from apps.site_settings.models import Locations
 
 class ClassifiedFilter(django_filters.FilterSet):
     min_price = django_filters.NumberFilter(
-        field_name="classifieddetail__price", lookup_expr='gte')
+        field_name="detail__price", lookup_expr='gte')
     max_price = django_filters.NumberFilter(
-        field_name="classifieddetail__price", lookup_expr='lte')
+        field_name="detail__price", lookup_expr='lte')
     category = django_filters.ModelChoiceFilter(
-        queryset=Category.objects.all())
+        queryset=Category.objects.all(),
+        field_name="category"
+    )
     location = django_filters.ModelChoiceFilter(
-        queryset=Locations.objects.all()
+        queryset=Locations.objects.all(),
+        field_name="detail__location"
     )
 
     class Meta:

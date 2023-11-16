@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.users.models import User
-from apps.classifieds.models import Classified
+from apps.classifieds.models import Classified, DELETED
 from .filters import UserFilter, ClassifiedFilter
 from apps.user_searches.models import SearchQuery
 from apps.user_searches.serializers import SearchQuerySerializer
@@ -36,7 +36,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 
 class UserClassifiedsViewSet(viewsets.ModelViewSet):
-    queryset = Classified.objects.all()
+    queryset = Classified.objects.exclude(status=DELETED)
     serializer_class = UserClassifiedListSerializer
     permission_classes = [permissions.IsAdminUser,]
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -74,7 +74,10 @@ class ClassifiedsViewSet(viewsets.ModelViewSet):
         try:
             user = self.kwargs['user_pk']
             if user:
-                return Classified.objects.filter(owner=user)
+                return Classified.objects.filter(
+                    owner=user,
+                    status__neq='DELETED'
+                ).order_by('-created_at')
             return None
         except:
             return None

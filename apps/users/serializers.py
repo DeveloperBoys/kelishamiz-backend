@@ -95,26 +95,12 @@ class UserDataSerializer(serializers.ModelSerializer):
     fatherName = serializers.CharField(source='first_name', required=False)
     phoneNumber = serializers.CharField(source='phone_number', required=True)
     birthDate = serializers.CharField(source='birth_date', required=False)
-    # searches = serializers.SerializerMethodField()
-    # classifieds = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'firstName', 'lastName', 'fatherName', 'email', 'phoneNumber',
                   'birthDate', 'profileImage']
         read_only_fields = ['id']
-
-    # def get_searches(self, obj):
-    #     user_searches = SearchQuery.objects.filter(user=obj)
-    #     if user_searches.exists():
-    #         return SearchQuerySerializer(user_searches, many=True).data
-    #     return None
-
-    # def get_classifieds(self, obj):
-    #     all_classifieds = Classified.objects.filter(owner=obj)
-    #     if all_classifieds.exists():
-    #         return ClassifiedListSerializer(all_classifieds, many=True).data
-    #     return None
 
 
 class ChangeUserInformationSerializer(serializers.Serializer):
@@ -152,6 +138,9 @@ class ChangeUserInformationSerializer(serializers.Serializer):
             'birthDate', instance.birth_date)
         instance.phone_number = validated_data.get(
             'phoneNumber', instance.phone_number)
+        instance.profile_image = validated_data.get(
+            'profileImage', instance.profile_image
+        )
 
         instance.save()
         return instance

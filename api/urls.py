@@ -6,6 +6,7 @@ from admin_profile import views as admin_views
 from admin_profile.urls import admin_router, user_router
 from apps.classifieds import views as classified_views
 from apps.site_settings import views as site_settings_views
+from apps.payments.views import OrderCreateView
 
 classified_urlpatterns = [
     # Category URLs
@@ -92,5 +93,17 @@ site_settings_urlpatterns = [
          name='locations-detail'),
 ]
 
-urlpatterns = (classified_urlpatterns + likes_urlpatterns +
-               user_urlpatterns + admin_urlpatterns + site_settings_urlpatterns)
+
+payments_urlpatterns = [
+    path('order/', OrderCreateView.as_view(), name='order=model-list'),
+]
+
+
+urlpatterns = (
+    classified_urlpatterns +
+    likes_urlpatterns +
+    user_urlpatterns +
+    admin_urlpatterns +
+    site_settings_urlpatterns +
+    payments_urlpatterns
+)

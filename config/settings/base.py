@@ -25,9 +25,10 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
-    'admin_profile.apps.AdminConfig',
     'apps.likes.apps.LikesConfig',
     'apps.users.apps.UsersConfig',
+    'admin_profile.apps.AdminConfig',
+    'apps.payments.apps.PaymentsConfig',
     'apps.promotions.apps.PromotionsConfig',
     'apps.user_searches.apps.UserSearchesConfig',
     'apps.permissions.apps.PermissionsConfig',
@@ -36,6 +37,7 @@ LOCAL_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    'payme',
     'corsheaders',
     'drf_yasg',
     'rest_framework',
@@ -168,6 +170,17 @@ CORS_ORIGIN_WHITELIST = [
 CORS_ORIGIN_ALLOW_ALL = True
 
 HOST = config("HOST_URL")
+
+PAYME: dict = {
+    'PAYME_ID': config('PAYME_ID'),
+    'PAYME_KEY': config('PAYME_KEY'),
+    'PAYME_URL': config('PAYME_URL'),
+    'PAYME_CALL_BACK_URL': config('PAYME_CALLBACK_URL'),
+    'PAYME_MIN_AMOUNT': config('PAYME_MIN_AMOUNT'),
+    'PAYME_ACCOUNT': config('PAYME_ACCOUNT'),
+}
+
+ORDER_MODEL = 'apps.payments.models.CustomOrder'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

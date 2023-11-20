@@ -9,6 +9,9 @@ class ClassifiedFilter(django_filters.FilterSet):
         field_name="detail__price", lookup_expr='gte')
     max_price = django_filters.NumberFilter(
         field_name="detail__price", lookup_expr='lte')
+    currency_type = django_filters.CharFilter(
+        field_name="detail__currency_type"
+    )
     category = django_filters.ModelChoiceFilter(
         queryset=Category.objects.all(),
         field_name="category"
@@ -20,4 +23,5 @@ class ClassifiedFilter(django_filters.FilterSet):
 
     class Meta:
         model = Classified
-        fields = ['min_price', 'max_price', 'category', 'location']
+        fields = ['min_price', 'max_price',
+                  'currency_type', 'category', 'location']

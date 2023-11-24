@@ -17,7 +17,7 @@ class ChildCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('id', 'name', 'iconUrl')
+        fields = ('id', 'name', 'slug', 'iconUrl')
         read_only_fields = ('id',)
 
 
@@ -124,6 +124,7 @@ class ClassifiedDetailSerializer(serializers.ModelSerializer):
 
 class ClassifiedListSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField(read_only=True)
+    currencyType = serializers.SerializerMethodField(read_only=True)
     images = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     isLiked = serializers.BooleanField(source='is_liked')
@@ -133,13 +134,18 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Classified
         fields = ('id', 'category', 'owner', 'title', 'slug', 'images',
-                  'price', 'isLiked', 'location', 'createdAt')
+                  'price', 'currencyType', 'isLiked', 'location', 'createdAt')
         read_only_fields = ('id', 'slug')
 
     def get_price(self, obj):
         classified_detail = ClassifiedDetail.objects.filter(
             classified=obj).first()
         return classified_detail.price if classified_detail else None
+
+    def get_currencyType(self, obj):
+        classified_detail = ClassifiedDetail.objects.filter(
+            classified=obj).first()
+        return classified_detail.currency_type if classified_detail else None
 
     def get_category(self, obj):
         request = self.context.get('request')

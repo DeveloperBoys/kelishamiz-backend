@@ -11,12 +11,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from .models import User
 # from .tasks import send_phone_notification
 from config.utility import check_phone
-from apps.likes.models import ClassifiedLike
-from apps.classifieds.models import Classified
-from apps.user_searches.models import SearchQuery
 from .utils import phone_parser, send_phone_notification
-from apps.user_searches.serializers import SearchQuerySerializer
-from apps.classifieds.serializers import ClassifiedListSerializer
 
 
 class VerifyRequestSerializer(serializers.Serializer):
@@ -36,7 +31,7 @@ class UserLoginSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         phone_number = attrs.get('phoneNumber')
-        user, created = self.get_or_create_user(phone_number)
+        user = self.get_or_create_user(phone_number)
 
         refresh = RefreshToken.for_user(user)
         access_token = refresh.access_token
@@ -45,11 +40,6 @@ class UserLoginSerializer(serializers.Serializer):
             'refresh': str(refresh),
             'access': str(access_token),
         }
-
-        if created:
-            data['newUser'] = True
-        else:
-            data['newUser'] = False
 
         return data
 
@@ -61,7 +51,7 @@ class UserLoginSerializer(serializers.Serializer):
         code = user.create_verify_code()
         # send_phone_notification.delay(user.phone_number, code)
         send_phone_notification(user.phone_number, code)
-        return user, created
+        return user
 
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):
@@ -91,7 +81,9 @@ class LogoutSerializer(serializers.Serializer):
 class UserDataSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(source='first_name', required=True)
     lastName = serializers.CharField(source='last_name', required=True)
-    profileImage = serializers.FileField(source='father_name', required=False)
+    profileImage = serializers.FileField(
+        source='profile_image', required=False)
+    balance = serializers.SerializerMethodField(read_only=True)
     fatherName = serializers.CharField(source='first_name', required=False)
     phoneNumber = serializers.CharField(source='phone_number', required=True)
     birthDate = serializers.CharField(source='birth_date', required=False)
@@ -99,8 +91,12 @@ class UserDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'firstName', 'lastName', 'fatherName', 'email', 'phoneNumber',
-                  'birthDate', 'profileImage']
+                  'birthDate', 'profileImage', 'balance']
         read_only_fields = ['id']
+
+    def get_balance(self, obj):
+        user = User.objects.select_related('userbalance').get(id=obj.id)
+        return user.userbalance.balance
 
 
 class ChangeUserInformationSerializer(serializers.Serializer):

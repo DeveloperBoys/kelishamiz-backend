@@ -81,7 +81,7 @@ class ClassifiedListView(generics.ListAPIView):
         queryset = super().filter_queryset(queryset)
 
         search_query = self.request.query_params.get('search')
-        if search_query and self.request.user:
+        if search_query and self.request.user.is_authenticated:
             SearchQuery.objects.create(
                 user=self.request.user,
                 query=search_query
@@ -102,7 +102,7 @@ class ClassifiedListView(generics.ListAPIView):
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
-class ClassifiedDetailView(generics.ListAPIView):
+class ClassifiedDetailView(generics.RetrieveAPIView):
     queryset = Classified.objects.filter(status=APPROVED)
     serializer_class = ClassifiedSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, ]

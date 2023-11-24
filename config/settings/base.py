@@ -27,7 +27,7 @@ BASE_APPS = [
 LOCAL_APPS = [
     'apps.likes.apps.LikesConfig',
     'apps.users.apps.UsersConfig',
-    'admin_profile.apps.AdminConfig',
+    'apps.admin_api.apps.AdminConfig',
     'apps.payments.apps.PaymentsConfig',
     'apps.promotions.apps.PromotionsConfig',
     'apps.user_searches.apps.UserSearchesConfig',

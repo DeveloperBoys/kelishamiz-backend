@@ -8,6 +8,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
+from apps.payments.models import UserBalance
+
 from .models import User
 # from .tasks import send_phone_notification
 from config.utility import check_phone
@@ -95,8 +97,10 @@ class UserDataSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def get_balance(self, obj):
-        user = User.objects.select_related('userbalance').get(id=obj.id)
-        return user.userbalance.balance
+        user_balance = UserBalance.objects.filter(user=obj).last()
+        if user_balance:
+            return user_balance.balance
+        return None
 
 
 class ChangeUserInformationSerializer(serializers.Serializer):

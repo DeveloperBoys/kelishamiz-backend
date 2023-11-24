@@ -212,29 +212,6 @@ class DeleteClassifiedSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CreateClassifiedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Classified
-        fields = ('id', 'category', 'title')
-        read_only_fields = ('id',)
-
-    def create(self, validated_data):
-        classified = Classified.objects.create(
-            owner=self.context['request'].user,
-            status=DRAFT,
-            **validated_data
-        )
-        return classified
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.category.pk = validated_data.get(
-            'category', instance.category.pk)
-        instance.save()
-        return instance
-
-
 class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
     dynamicFields = DynamicFieldSerializer(many=True, write_only=True)
     currencyType = serializers.CharField(required=True, write_only=True)
@@ -298,18 +275,28 @@ class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CreateClassifiedImageSerializer(serializers.ModelSerializer):
+class ClassifiedCreateSerializer(serializers.Serializer):
+    categoryId = serializers.IntegerField()
+    title = serializers.CharField(max_length=150)
+    detail = CreateClassifiedDetailSerializer()
+    images = ClassifiedImageSerializer(many=True, write_only=True)
 
-    class Meta:
-        model = ClassifiedImage
-        fields = ('id',)
-        read_only_fields = ('id',)
+    def create(self, validated_data):
+        detail_data = validated_data.pop('detail')
+        dynamic_fields_data = detail_data.pop('dynamic_fields', [])
 
-    def update(self, instance, validated_data):
-        instance.image = validated_data.get('image', instance.image)
-        instance.save()
-        return instance
+        category = Category.objects.get(id=validated_data['categoryId'])
+        owner = self.context['request'].user
+        title = validated_data['title']
 
-    def delete(self, instance):
-        instance.delete()
-        return instance
+        classified = Classified.objects.create(
+            category=category,
+            owner=owner,
+            title=title
+        )
+
+        detail_serializer = CreateClassifiedDetailSerializer(data=detail_data)
+        detail_serializer.is_valid(raise_exception=True)
+        classified_detail = detail_serializer.save(classified=classified)
+
+        return classified

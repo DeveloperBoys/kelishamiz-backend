@@ -37,9 +37,8 @@ from .serializers import (
     ClassifiedListSerializer,
     ClassifiedSerializer,
     ClassifiedImageSerializer,
-    CreateClassifiedSerializer,
     DeleteClassifiedSerializer,
-    CreateClassifiedImageSerializer,
+    ClassifiedCreateSerializer,
     CreateClassifiedDetailSerializer
 )
 
@@ -118,7 +117,7 @@ class DeleteClassifiedView(generics.DestroyAPIView):
 
 @method_decorator(cache_page(60*15), name='dispatch')
 class CreateClassifiedView(generics.CreateAPIView):
-    serializer_class = CreateClassifiedSerializer
+    serializer_class = ClassifiedCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -127,26 +126,11 @@ class CreateClassifiedView(generics.CreateAPIView):
         except:
             return None
 
-
-@method_decorator(cache_page(60*15), name='dispatch')
-class CreateClassifiedImageView(generics.CreateAPIView):
-    serializer_class = CreateClassifiedImageSerializer
-    permission_classes = [permissions.IsAuthenticated,
-                          ClassifiedOwner, DraftClassifiedPermission]
-
-    def get_queryset(self):
-        try:
-            return ClassifiedImage.objects.filter(classified=self.kwargs['pk'])
-        except:
-            return None
-
     def post(self, request, pk):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        classified = memcache_client.get(f'classified-{pk}')
-        if not classified:
-            classified = Classified.objects.prefetch_related(
-                'images').get(pk=pk)
-            memcache_client.set(f'classified-{pk}', classified)
+        classified = serializer.save()
 
         uploaded_files = [SimpleUploadedFile(f.name, f.read())
                           for f in request.FILES.getlist('images')]
@@ -183,25 +167,8 @@ class CreateClassifiedImageView(generics.CreateAPIView):
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
-class CreateClassifiedDetailView(generics.CreateAPIView):
-    serializer_class = CreateClassifiedDetailSerializer
-    permission_classes = [permissions.IsAuthenticated,
-                          ClassifiedOwner, DraftClassifiedPermission]
-
-    def get_queryset(self):
-        try:
-            return ClassifiedDetail.objects.filter(classified=self.kwargs['pk'])
-        except:
-            return None
-
-    def perform_create(self, serializer):
-        classified = get_object_or_404(Classified, pk=self.kwargs['pk'])
-        return serializer.save(classified=classified)
-
-
-@method_decorator(cache_page(60*15), name='dispatch')
 class EditClassifiedView(generics.UpdateAPIView):
-    serializer_class = CreateClassifiedSerializer
+    serializer_class = ClassifiedCreateSerializer
     permission_classes = [permissions.IsAuthenticated,
                           ClassifiedOwner, PublishedClassifiedPermission]
 

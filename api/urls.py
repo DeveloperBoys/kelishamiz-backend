@@ -2,8 +2,8 @@ from django.urls import include, path
 
 from apps.users import views as user_views
 from apps.likes import views as likes_views
-from admin_profile import views as admin_views
-from admin_profile.urls import admin_router, user_router
+from apps.admin_api import views as admin_views
+from apps.admin_api.urls import admin_router, user_router
 from apps.classifieds import views as classified_views
 from apps.site_settings import views as site_settings_views
 from apps.payments.views import OrderCreateView
@@ -26,14 +26,14 @@ classified_urlpatterns = [
          name='create-classified'),
     path('classifieds/<int:pk>/edit/',
          classified_views.EditClassifiedView.as_view(), name='edit-classified'),
-    path('classifieds/<int:pk>/images/create/',
-         classified_views.CreateClassifiedImageView.as_view(), name='create-classified-image'),
-    path('classifieds/<int:pk>/images/edit/',
-         classified_views.EditClassifiedImageView.as_view(), name='edit-classified-image'),
-    path('classifieds/<int:pk>/details/create/',
-         classified_views.CreateClassifiedDetailView.as_view(), name='create-classified-detail'),
-    path('classifieds/<int:pk>/details/edit/',
-         classified_views.EditClassifiedDetailView.as_view(), name='edit-classified-detail'),
+    #     path('classifieds/<int:pk>/images/create/',
+    #          classified_views.CreateClassifiedImageView.as_view(), name='create-classified-image'),
+    #     path('classifieds/<int:pk>/images/edit/',
+    #          classified_views.EditClassifiedImageView.as_view(), name='edit-classified-image'),
+    #     path('classifieds/<int:pk>/details/create/',
+    #          classified_views.CreateClassifiedDetailView.as_view(), name='create-classified-detail'),
+    #     path('classifieds/<int:pk>/details/edit/',
+    #          classified_views.EditClassifiedDetailView.as_view(), name='edit-classified-detail'),
 ]
 
 likes_urlpatterns = [

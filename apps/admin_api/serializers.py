@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from django.contrib.auth import authenticate
 from apps.classifieds.models import Classified, ClassifiedDetail, ClassifiedImage
 from apps.classifieds.serializers import ClassifiedDetailSerializer
+from apps.payments.models import UserBalance
 
 from config.utility import check_user_type
 
@@ -84,6 +85,7 @@ class UsersSerializer(serializers.ModelSerializer):
     lastName = serializers.CharField(source="last_name")
     fatherName = serializers.CharField(source="father_name", required=False)
     phoneNumber = serializers.CharField(source="phone_number")
+    balance = serializers.SerializerMethodField()
     birthDate = serializers.DateField(source="birth_date", required=False)
     profileImageUrl = serializers.URLField(
         source="profile_image_url", read_only=True)
@@ -98,6 +100,12 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = ['id', 'fistName', 'lastName', 'isActive', 'fatherName', 'phoneNumber', 'email',
                   'birthDate', 'profileImageUrl', 'balance', 'profileImage', 'userRoles', 'authType', 'dateJoined']
         read_only_fields = ['id',]
+
+    def get_balance(self, obj):
+        user_balance = UserBalance.objects.filter(user=obj).last()
+        if user_balance:
+            return user_balance.balance
+        return None
 
 
 class UserClassifiedsSerializer(serializers.ModelSerializer):

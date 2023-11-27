@@ -10,8 +10,8 @@ services:
       DATABASE_NAME: ${DB_NAME}
       DATABASE_USER: ${DB_USERNAME}
       DATABASE_PASSWORD: ${DB_PASSWORD}
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_HOST: ${DB_HOST}
+      DATABASE_PORT: ${DB_PORT}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       - postgres
@@ -99,8 +99,8 @@ services:
       DATABASE_NAME: ${DB_NAME}
       DATABASE_USER: ${DB_USER}
       DATABASE_PASSWORD: ${DB_PASSWORD}
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_HOST: ${DB_HOST}
+      DATABASE_PORT: ${DB_PORT}
       REDIS_URL: redis://redis:6379/0
     networks:
       - postgres

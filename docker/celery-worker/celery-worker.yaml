@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kelishamiz-celery-worker-deployment
+  namespace: default
+  labels:
+    app: kelishamiz-celery-worker
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: kelishamiz-celery-worker
+  template:
+    metadata:
+      labels:
+        app: kelishamiz-celery-worker
+    spec:
+      terminationGracePeriodSeconds: 86400
+      imagePullSecrets:
+        - name: dockerconfigjson-github-com
+      containers:
+        - name: kelishamiz-celery-worker-docker-image
+          image: ghcr.io/john-doherty01/kelishamiz-celery-worker:VERSION
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "500M"
+            limits:
+              cpu: "500m"
+              memory: "1000M"
+          readinessProbe:
+            exec:
+              command:
+                [
+                  "python",
+                  "-c",
+                  '"import os;from celery.app.control import Inspect;from api import celery_app;exit(0 if os.environ[''HOSTNAME''] in '',''.join(Inspect(app=celery_app).stats().keys()) else 1)"',
+                ]
+            initialDelaySeconds: 120
+            periodSeconds: 300
+          livenessProbe:
+            exec:
+              command:
+                [
+                  "python",
+                  "-c",
+                  '"import os;from celery.app.control import Inspect;from api import celery_app;exit(0 if os.environ[''HOSTNAME''] in '',''.join(Inspect(app=celery_app).stats().keys()) else 1)"',
+                ]
+            initialDelaySeconds: 120
+            periodSeconds: 300
+          env:
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: database_name
+                  optional: false
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: database_user
+                  optional: false
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: database_password
+                  optional: false
+            - name: DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: database_host
+                  optional: false
+            - name: DATABASE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: database_port
+                  optional: false
+            - name: ALLOWED_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: allowed_host
+                  optional: false
+            - name: CORS_ALLOWED_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: cors_allowed_origins
+                  optional: false
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: celery_broker_url
+                  optional: false
+            - name: CELERY_RESULT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: celery_result_url
+                  optional: false
+            - name: CHANNELS_URLS
+              valueFrom:
+                secretKeyRef:
+                  name: kelishamizsecret
+                  key: channels_url
+                  optional: false
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: celery-autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: kelishamiz-celery-worker-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50

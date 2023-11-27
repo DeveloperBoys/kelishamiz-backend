@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from .models import (
     DRAFT,
@@ -50,8 +51,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class DynamicFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = DynamicField
-        fields = ('id', 'key', 'value')
-        read_only_fields = ('id', )
+        fields = ('key', 'value')
 
 
 class ClassifiedImageSerializer(serializers.ModelSerializer):
@@ -212,104 +212,19 @@ class DeleteClassifiedSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CreateClassifiedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Classified
-        fields = ('id', 'category', 'title')
-        read_only_fields = ('id',)
-
-    def create(self, validated_data):
-        classified = Classified.objects.create(
-            owner=self.context['request'].user,
-            status=DRAFT,
-            **validated_data
-        )
-        return classified
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.category.pk = validated_data.get(
-            'category', instance.category.pk)
-        instance.save()
-        return instance
-
-
-class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
+class ClassifiedCreateSerializer(serializers.Serializer):
+    category = serializers.IntegerField()
+    title = serializers.CharField(max_length=150)
     dynamicFields = DynamicFieldSerializer(many=True, write_only=True)
-    currencyType = serializers.CharField(required=True, write_only=True)
-    isNegotiable = serializers.BooleanField(required=False, write_only=True)
+    currencyType = serializers.CharField()
+    isNegotiable = serializers.BooleanField(required=False)
+    price = serializers.DecimalField(max_digits=12, decimal_places=2)
+    description = serializers.CharField()
+    location = serializers.IntegerField()
+    images = ClassifiedImageSerializer(many=True)
 
-    class Meta:
-        model = ClassifiedDetail
-        fields = ('id', 'classified', 'currencyType', 'price',
-                  'isNegotiable', 'description', 'location', 'dynamicFields')
-        read_only_fields = ('id', 'classified')
-
-    def create(self, validated_data):
-        dynamic_fields_data = validated_data.pop('dynamicFields')
-        classified = validated_data.pop('classified')
-        currency_type = validated_data.pop('currencyType')
-        is_negotiable = validated_data.pop('isNegotiable')
-        price = validated_data.pop('price')
-        description = validated_data.pop('description')
-        location = validated_data.pop('location')
-
-        classified_detail = ClassifiedDetail.objects.create(
-            classified=classified,
-            currency_type=currency_type,
-            is_negotiable=is_negotiable,
-            price=price,
-            description=description,
-            location=location
-        )
-
-        for dynamic_field_data in dynamic_fields_data:
-            DynamicField.objects.create(
-                classified_detail=classified_detail, **dynamic_field_data)
-
-        classified.status = PENDING
-        classified.save()
-
-        return classified_detail
-
-    def update(self, instance, validated_data):
-        instance.currency_type = validated_data.get(
-            'currencyType', instance.currency_type)
-        instance.price = validated_data.get('price', instance.price)
-        instance.is_negotiable = validated_data.get(
-            'isNegotiable', instance.is_negotiable)
-        instance.description = validated_data.get(
-            'description', instance.description)
-        instance.location_id = validated_data.get(
-            'location', instance.location_id
-        )
-
-        dynamic_fields = validated_data.get('dynamicFields')
-        if dynamic_fields:
-            instance.dynamicfield_set.all().delete()
-            for dynamic_field in dynamic_fields:
-                DynamicField.objects.create(
-                    classified_detail=instance,
-                    **dynamic_field
-                )
-
-        instance.save()
-        return instance
-
-
-class CreateClassifiedImageSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ClassifiedImage
-        fields = ('id',)
-        read_only_fields = ('id',)
-
-    def update(self, instance, validated_data):
-        instance.image = validated_data.get('image', instance.image)
-        instance.save()
-        return instance
-
-    def delete(self, instance):
-        instance.delete()
-        return instance
+    def validate_currencyType(self, currency_type):
+        if currency_type != "usd" or "uzs":
+            raise ValidationError(
+                "The currencyType you entered is incorrect. It only accepts usd or uzs."
+            )

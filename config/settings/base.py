@@ -5,15 +5,11 @@ from datetime import timedelta
 from decouple import config
 
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
 
-
-# Application definition
 
 BASE_APPS = [
     'django.contrib.admin',
@@ -148,43 +144,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Tashkent'
-
-
-CORS_ALLOW_METHODS = [
-    '*'
-]
-CORS_ALLOW_HEADERS = [
-    '*'
-]
-CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = [
-    'https://*',
-    'http://*'
-]
-CORS_ORIGIN_ALLOW_ALL = True
-
-HOST = config("HOST_URL")
-
-PAYME: dict = {
-    'PAYME_ID': config('PAYME_ID'),
-    'PAYME_KEY': config('PAYME_KEY'),
-    'PAYME_URL': config('PAYME_URL'),
-    'PAYME_CALL_BACK_URL': config('PAYME_CALLBACK_URL'),
-    'PAYME_MIN_AMOUNT': config('PAYME_MIN_AMOUNT'),
-    'PAYME_ACCOUNT': config('PAYME_ACCOUNT'),
-}
-
-ORDER_MODEL = 'apps.payments.models.CustomOrder'
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Tashkent'
@@ -194,16 +153,69 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
+HOST = config("HOST_URL")
 AUTH_USER_MODEL = 'users.User'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Payme Setups
+PAYME: dict = {
+    'PAYME_ID': config('PAYME_ID'),
+    'PAYME_KEY': config('PAYME_KEY'),
+    'PAYME_URL': config('PAYME_URL'),
+    'PAYME_CALL_BACK_URL': config('PAYME_CALLBACK_URL'),
+    'PAYME_MIN_AMOUNT': config('PAYME_MIN_AMOUNT'),
+    'PAYME_ACCOUNT': config('PAYME_ACCOUNT'),
+}
+ORDER_MODEL = 'apps.payments.models.CustomOrder'
+
+
+# CORS Setups
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "referer",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-sessionid",
+    "x-requested-with"
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_REPLACE_HTTPS_REFERER = True
+CORS_EXPOSE_HEADERS = ['Set-Cookie']
+CORS_ORIGIN_WHITELIST = [
+    'https://*',
+    'http://*'
+]
+
+
+# CELERY Setups
+CELERY_BROKER_URL = config("", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = config("", "redis://redis:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = "Asia/Tashkent"
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_TASK_TRACK_STARTED = True
+CELERY_ACKS_LATE = True
+CELERY_WORKER_SEND_TASK_EVENTS = True
+CELERY_TASK_SEND_SENT_EVENT = True

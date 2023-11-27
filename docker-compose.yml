@@ -1,66 +1,125 @@
-version: '3.7'
+version: '3.9'
 
 services:
 
-  kelishamiz_backend:
+  flower:
+    build:
+      context: .
+      dockerfile: docker/celery-flower/Dockerfile
+    environment:
+      DATABASE_NAME: ${DB_NAME}
+      DATABASE_USER: ${DB_USERNAME}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - postgres
+      - redis
+      - celery-worker
+    ports:
+      - "5555:5555"
+
+  backend:
     image: backend
     volumes:
       - static:/static
       - media:/app/config/media
     env_file:
       - .env
-    networks:
-      - backend
     build:
       context: .
+      dockerfile: docker/backend/Dockerfile
     depends_on:
-      - db
+      - celery-worker
+      - flower
+    networks:
+      - postgres
+      - redis
     ports:
       - "8000:8000"
 
-  db:
-    image: postgres:14.9
+  postgres:
+    container_name: postgres_container
+    image: postgres
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres:/data/postgres
     networks:
-      - backend
+      - postgres
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+    depends_on:
+      - postgres
 
   nginx:
     image: nginx
-    build: ./deploy/nginx
+    build: docker/nginx/Dockerfile
     volumes:
       - static:/static
     ports:
       - "80:80"
     depends_on:
-      - kelishamiz_backend
+      - backend
     networks:
       - backend
 
-  celery:
-    image: celery
-    build: .
+  celery-worker:
+    restart: always
+    build:
+      context: .
+      dockerfile: docker/celery-worker/Dockerfile
     volumes:
-      - .:/app
+      - .:/usr/src/app
     depends_on:
-      - db
+      - postgres
       - redis
-    command: celery -A kelishamiz worker --loglevel=info -E
+      - pgadmin
     environment:
-      - DJANGO_DB_HOST=db
+      DATABASE_NAME: ${DB_NAME}
+      DATABASE_USER: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+    networks:
+      - postgres
+      - redis
+      - celery-worker
 
   redis:
-    image: redis:latest
-
-volumes:
-  pgdata:
-  static:
-  media:
-
+    image: "redis:alpine"
+    networks:
+      - redis
 
 networks:
-  backend:
+  postgres:
+    driver: bridge
+  redis:
+    driver: bridge
+  celery-worker:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:

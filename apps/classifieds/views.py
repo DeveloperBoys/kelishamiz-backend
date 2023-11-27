@@ -21,29 +21,26 @@ from .filters import ClassifiedFilter
 from apps.user_searches.models import SearchQuery
 from .models import (
     APPROVED,
+    DRAFT,
+    PENDING,
     Category,
     Classified,
     ClassifiedImage,
     ClassifiedDetail,
+    DynamicField,
 )
 from apps.permissions.permissions import (
     ClassifiedOwner,
     IsAdminOrReadOnly,
-    DraftClassifiedPermission,
     PublishedClassifiedPermission
 )
 from .serializers import (
     CategorySerializer,
     ClassifiedListSerializer,
     ClassifiedSerializer,
-    ClassifiedImageSerializer,
     DeleteClassifiedSerializer,
-    ClassifiedCreateSerializer,
-    CreateClassifiedDetailSerializer
+    ClassifiedCreateSerializer
 )
-
-
-memcache_client = memcache.Client(['127.0.0.1:11211'])
 
 
 class ClassifiedPagination(PageNumberPagination):
@@ -126,11 +123,36 @@ class CreateClassifiedView(generics.CreateAPIView):
         except:
             return None
 
-    def post(self, request, pk):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    def post(self, request):
+        title = request.data.pop('title')
+        category = request.data.pop('category')
+        owner = request.user
+        dynamic_fields_data = request.data.pop('dynamicFields')
+        currency_type = request.data.pop('currencyType')
+        is_negotiable = request.data.pop('isNegotiable')
+        price = request.data.pop('price')
+        description = request.data.pop('description')
+        location = request.data.pop('location')
 
-        classified = serializer.save()
+        classified = Classified.objects.create(
+            category_id=category,
+            title=title,
+            owner=owner,
+            status=DRAFT
+        )
+
+        classified_detail = ClassifiedDetail.objects.create(
+            classified=classified,
+            currency_type=currency_type,
+            is_negotiable=is_negotiable,
+            price=price,
+            description=description,
+            location_id=location
+        )
+
+        for dynamic_field_data in dynamic_fields_data:
+            DynamicField.objects.create(
+                classified_detail=classified_detail, **dynamic_field_data)
 
         uploaded_files = [SimpleUploadedFile(f.name, f.read())
                           for f in request.FILES.getlist('images')]
@@ -163,6 +185,9 @@ class CreateClassifiedView(generics.CreateAPIView):
 
         ClassifiedImage.objects.bulk_create(batch)
 
+        classified.status = PENDING
+        classified.save()
+
         return Response(status=204)
 
 
@@ -177,45 +202,3 @@ class EditClassifiedView(generics.UpdateAPIView):
             return Classified.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
-
-
-@method_decorator(cache_page(60*15), name='dispatch')
-class EditClassifiedImageView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = ClassifiedImageSerializer
-    permission_classes = [permissions.IsAuthenticated,
-                          ClassifiedOwner, PublishedClassifiedPermission]
-
-    def get_queryset(self):
-        try:
-            return ClassifiedImage.objects.filter(classified=self.kwargs['pk'])
-        except:
-            return None
-
-    def get_object(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(ClassifiedImage, pk=pk)
-
-    def check_object_permissions(self, request, obj):
-        if not request.user.has_perm('can_edit_classified', obj.classified):
-            raise PermissionDenied()
-
-
-@method_decorator(cache_page(60*15), name='dispatch')
-class EditClassifiedDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = CreateClassifiedDetailSerializer
-    permission_classes = [permissions.IsAuthenticated,
-                          ClassifiedOwner, PublishedClassifiedPermission]
-
-    def get_queryset(self):
-        try:
-            return ClassifiedDetail.objects.filter(classified=self.kwargs['pk'])
-        except:
-            return None
-
-    def get_object(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(ClassifiedDetail, classified__pk=pk)
-
-    def check_object_permissions(self, request, obj):
-        if not request.user.has_perm('can_edit_classified', obj.classified):
-            raise PermissionDenied()

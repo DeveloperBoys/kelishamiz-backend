@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from .models import (
     DRAFT,
@@ -50,8 +51,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class DynamicFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = DynamicField
-        fields = ('id', 'key', 'value')
-        read_only_fields = ('id', )
+        fields = ('key', 'value')
 
 
 class ClassifiedImageSerializer(serializers.ModelSerializer):
@@ -212,91 +212,19 @@ class DeleteClassifiedSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CreateClassifiedDetailSerializer(serializers.ModelSerializer):
-    dynamicFields = DynamicFieldSerializer(many=True, write_only=True)
-    currencyType = serializers.CharField(required=True, write_only=True)
-    isNegotiable = serializers.BooleanField(required=False, write_only=True)
-
-    class Meta:
-        model = ClassifiedDetail
-        fields = ('id', 'classified', 'currencyType', 'price',
-                  'isNegotiable', 'description', 'location', 'dynamicFields')
-        read_only_fields = ('id', 'classified')
-
-    def create(self, validated_data):
-        dynamic_fields_data = validated_data.pop('dynamicFields')
-        classified = validated_data.pop('classified')
-        currency_type = validated_data.pop('currencyType')
-        is_negotiable = validated_data.pop('isNegotiable')
-        price = validated_data.pop('price')
-        description = validated_data.pop('description')
-        location = validated_data.pop('location')
-
-        classified_detail = ClassifiedDetail.objects.create(
-            classified=classified,
-            currency_type=currency_type,
-            is_negotiable=is_negotiable,
-            price=price,
-            description=description,
-            location=location
-        )
-
-        for dynamic_field_data in dynamic_fields_data:
-            DynamicField.objects.create(
-                classified_detail=classified_detail, **dynamic_field_data)
-
-        classified.status = PENDING
-        classified.save()
-
-        return classified_detail
-
-    def update(self, instance, validated_data):
-        instance.currency_type = validated_data.get(
-            'currencyType', instance.currency_type)
-        instance.price = validated_data.get('price', instance.price)
-        instance.is_negotiable = validated_data.get(
-            'isNegotiable', instance.is_negotiable)
-        instance.description = validated_data.get(
-            'description', instance.description)
-        instance.location_id = validated_data.get(
-            'location', instance.location_id
-        )
-
-        dynamic_fields = validated_data.get('dynamicFields')
-        if dynamic_fields:
-            instance.dynamicfield_set.all().delete()
-            for dynamic_field in dynamic_fields:
-                DynamicField.objects.create(
-                    classified_detail=instance,
-                    **dynamic_field
-                )
-
-        instance.save()
-        return instance
-
-
 class ClassifiedCreateSerializer(serializers.Serializer):
-    categoryId = serializers.IntegerField()
+    category = serializers.IntegerField()
     title = serializers.CharField(max_length=150)
-    detail = CreateClassifiedDetailSerializer()
-    images = ClassifiedImageSerializer(many=True, write_only=True)
+    dynamicFields = DynamicFieldSerializer(many=True, write_only=True)
+    currencyType = serializers.CharField()
+    isNegotiable = serializers.BooleanField(required=False)
+    price = serializers.DecimalField(max_digits=12, decimal_places=2)
+    description = serializers.CharField()
+    location = serializers.IntegerField()
+    images = ClassifiedImageSerializer(many=True)
 
-    def create(self, validated_data):
-        detail_data = validated_data.pop('detail')
-        dynamic_fields_data = detail_data.pop('dynamic_fields', [])
-
-        category = Category.objects.get(id=validated_data['categoryId'])
-        owner = self.context['request'].user
-        title = validated_data['title']
-
-        classified = Classified.objects.create(
-            category=category,
-            owner=owner,
-            title=title
-        )
-
-        detail_serializer = CreateClassifiedDetailSerializer(data=detail_data)
-        detail_serializer.is_valid(raise_exception=True)
-        classified_detail = detail_serializer.save(classified=classified)
-
-        return classified
+    def validate_currencyType(self, currency_type):
+        if currency_type != "usd" or "uzs":
+            raise ValidationError(
+                "The currencyType you entered is incorrect. It only accepts usd or uzs."
+            )

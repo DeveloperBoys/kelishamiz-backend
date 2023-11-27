@@ -11,9 +11,9 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from apps.payments.models import UserBalance
 
 from .models import User
-# from .tasks import send_phone_notification
+from .utils import phone_parser
 from config.utility import check_phone
-from .utils import phone_parser, send_phone_notification
+from .tasks import send_phone_notification
 
 
 class VerifyRequestSerializer(serializers.Serializer):
@@ -51,8 +51,7 @@ class UserLoginSerializer(serializers.Serializer):
             user.set_unusable_password()
             user.save()
         code = user.create_verify_code()
-        # send_phone_notification.delay(user.phone_number, code)
-        send_phone_notification(user.phone_number, code)
+        send_phone_notification.delay(user.phone_number, code)
         return user
 
 

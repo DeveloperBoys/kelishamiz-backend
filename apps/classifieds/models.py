@@ -11,8 +11,8 @@ from .base import Base
 User = get_user_model()
 
 
-DRAFT, PENDING, APPROVED, REJECTED, DELETED = (
-    "draft", "pending", "approved", "rejected", "deleted"
+PENDING, APPROVED, REJECTED, DELETED = (
+    "pending", "approved", "rejected", "deleted"
 )
 
 
@@ -51,7 +51,6 @@ class Classified(Base):
     Classified model to store basic classifieds information.
     """
     CLASSIFIED_STATUS = (
-        (DRAFT, DRAFT),
         (PENDING, PENDING),
         (APPROVED, APPROVED),
         (REJECTED, REJECTED),
@@ -61,7 +60,7 @@ class Classified(Base):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(
-        max_length=8, db_index=True, choices=CLASSIFIED_STATUS, default=DRAFT)
+        max_length=8, db_index=True, choices=CLASSIFIED_STATUS)
     title = models.CharField(max_length=150)
     slug = models.SlugField(max_length=250, blank=True, null=True)
     is_liked = models.BooleanField(default=False)

@@ -7,11 +7,12 @@ from django.core.exceptions import ValidationError
 from apps.classifieds.models import Classified
 
 
-class Promotion(models.Model):
+class Ad(models.Model):
     name = models.CharField(max_length=100)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     views_multiplier = models.IntegerField()
     bump_ups = models.IntegerField(help_text="Number of ad bump ups")
+    duration = models.IntegerField(help_text="Number of days in VIP ads")
 
     class Meta:
         abstract = True
@@ -20,20 +21,20 @@ class Promotion(models.Model):
         return self.name
 
 
-class VipPromotion(Promotion):
-    duration = models.IntegerField(help_text="Number of days in VIP ads")
+# class VipAd(Ad):
+#     duration = models.IntegerField(help_text="Number of days in VIP ads")
 
-    class Meta:
-        verbose_name = "Vip Promotion"
-        verbose_name_plural = "Vip Promotions"
+#     class Meta:
+#         verbose_name = "Vip Ad"
+#         verbose_name_plural = "Vip Ads"
 
-    def __str__(self):
-        return self.name
+#     def __str__(self):
+#         return self.name
 
 
-class PromotionClassified(models.Model):
+class AdClassified(models.Model):
     classified = models.ForeignKey(Classified, on_delete=models.CASCADE)
-    promotion = models.ForeignKey(Promotion, on_delete=models.CASCADE)
+    ad = models.ForeignKey(Ad, on_delete=models.CASCADE)
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField()
 
@@ -42,27 +43,27 @@ class PromotionClassified(models.Model):
         now = timezone.now()
         return self.start_date <= now <= self.end_date
 
-    def validate_promotion(self):
+    def validate_ad(self):
         try:
-            if not self.promotion.is_active:
-                raise ValidationError("Promotion is no longer active")
-        except Promotion.DoesNotExist:
-            raise ValidationError("Invalid promotion")
+            if not self.ad.is_active:
+                raise ValidationError("Ad is no longer active")
+        except Ad.DoesNotExist:
+            raise ValidationError("Invalid ad")
 
         # Check user balance
-        if self.classified.user.balance < self.promotion.cost:
-            raise ValidationError("Insufficient balance for promotion cost")
+        if self.classified.user.balance < self.ad.cost:
+            raise ValidationError("Insufficient balance for ad cost")
 
         # Check classified not already promoted
-        other_promos = PromotionClassified.objects.filter(
+        other_ads = AdClassified.objects.filter(
             classified=self.classified,
             is_active=True
         )
-        if other_promos.exists():
-            raise ValidationError("Classified already has an active promotion")
+        if other_ads.exists():
+            raise ValidationError("Classified already has an active ad")
 
     def clean(self):
-        self.validate_promotion()
+        self.validate_ad()
 
     def save(self, *args, **kwargs):
         self.full_clean()

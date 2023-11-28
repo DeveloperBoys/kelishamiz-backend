@@ -21,11 +21,11 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
+    'apps.ads.apps.AdsConfig',
     'apps.likes.apps.LikesConfig',
     'apps.users.apps.UsersConfig',
     'apps.admin_api.apps.AdminConfig',
     'apps.payments.apps.PaymentsConfig',
-    'apps.promotions.apps.PromotionsConfig',
     'apps.user_searches.apps.UserSearchesConfig',
     'apps.permissions.apps.PermissionsConfig',
     'apps.classifieds.apps.ClassifiedsConfig',

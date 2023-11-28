@@ -96,11 +96,6 @@ class ClassifiedDetail(Base):
         verbose_name = "Classified Detail"
         verbose_name_plural = "Classified Details"
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
-
 
 class ClassifiedImage(Base):
     """

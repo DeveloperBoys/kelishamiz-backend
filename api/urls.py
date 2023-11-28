@@ -1,12 +1,13 @@
 from django.urls import include, path
 
+from apps.ads import views as ads_views
 from apps.users import views as user_views
 from apps.likes import views as likes_views
 from apps.admin_api import views as admin_views
-from apps.admin_api.urls import admin_router, user_router
-from apps.classifieds import views as classified_views
-from apps.site_settings import views as site_settings_views
 from apps.payments.views import OrderCreateView
+from apps.classifieds import views as classified_views
+from apps.admin_api.urls import admin_router, user_router
+from apps.site_settings import views as site_settings_views
 
 classified_urlpatterns = [
     # Category URLs
@@ -99,11 +100,22 @@ payments_urlpatterns = [
 ]
 
 
+ads_urlpatterns = [
+    path('ad', ads_views.AdView.as_view(), name='ad-list-create'),
+    path('ad/<int:pk>', ads_views.EditAdView.as_view(), name='ad-detail'),
+    path('ad-classified', ads_views.AdClassifiedView.as_view(),
+         name='ad-classified-list-create'),
+    path('ad-classified/<int:pk>', ads_views.EditAdClassifiedView.as_view(),
+         name='ad-classified-detail'),
+]
+
+
 urlpatterns = (
-    classified_urlpatterns +
-    likes_urlpatterns +
+    ads_urlpatterns +
     user_urlpatterns +
+    likes_urlpatterns +
     admin_urlpatterns +
-    site_settings_urlpatterns +
-    payments_urlpatterns
+    payments_urlpatterns +
+    classified_urlpatterns +
+    site_settings_urlpatterns
 )

@@ -1,8 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
 
 from apps.payments.models import UserBalance
 from apps.classifieds.models import Classified
@@ -12,49 +10,15 @@ class Ad(models.Model):
     name = models.CharField(max_length=100)
     short_description = models.CharField(max_length=250)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
+    top_duration = models.IntegerField(help_text="Number of days in TOP ads")
     bump_ups = models.IntegerField(
         help_text="Number of ad bump ups", blank=True, null=True)
-    top_duration = models.IntegerField(
-        help_text="Number of days in TOP ads", blank=True, null=True)
+    vip_duration = models.IntegerField(
+        help_text="Number of days in VIP ads", blank=True, null=True)
 
     class Meta:
-        abstract = True
-
-
-class StartAd(Ad):
-
-    class Meta:
-        verbose_name = "Start Ad"
-        verbose_name_plural = "Start Ads"
-
-    def __str__(self):
-        return self.name
-
-
-class FasterAd(Ad):
-    bump_ups = models.IntegerField(
-        help_text="Number of ad bump ups")
-    top_duration = models.IntegerField(
-        help_text="Number of days in TOP ads")
-
-    class Meta:
-        verbose_name = "Faster Ad"
-        verbose_name_plural = "Faster Ads"
-
-    def __str__(self):
-        return self.name
-
-
-class VipAd(Ad):
-    bump_ups = models.IntegerField(
-        help_text="Number of ad bump ups")
-    top_duration = models.IntegerField(
-        help_text="Number of days in TOP ads")
-    vip_duration = models.IntegerField(help_text="Number of days in VIP ads")
-
-    class Meta:
-        verbose_name = "Vip Ad"
-        verbose_name_plural = "Vip Ads"
+        verbose_name = "Ad"
+        verbose_name_plural = "Ads"
 
     def __str__(self):
         return self.name
@@ -62,12 +26,10 @@ class VipAd(Ad):
 
 class AdClassified(models.Model):
     classified = models.ForeignKey(Classified, on_delete=models.CASCADE)
-    # ad = models.ForeignKey(Ad, on_delete=models.CASCADE)
-    ad_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    ad_object_id = models.PositiveIntegerField()
-    ad = GenericForeignKey('ad_content_type', 'ad_object_id')
+    ad = models.ForeignKey(Ad, on_delete=models.CASCADE)
 
-    start_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField(
+        blank=True, null=True, default=timezone.now)
     end_date = models.DateTimeField(blank=True, null=True)
 
     @property
@@ -92,6 +54,11 @@ class AdClassified(models.Model):
             raise ValidationError(
                 "Classified already has an active purchased ad")
 
+    def set_end_date(self):
+        if not self.end_date:
+            self.end_date = self.start_date + \
+                timezone.datetime(day=self.ad.top_duration)
+
     def deduct_ad_cost(self):
         user_balance = UserBalance.objects.filter(
             user=self.classified.owner).last()
@@ -101,5 +68,6 @@ class AdClassified(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             self.validate()
+            self.set_end_date()
             self.deduct_ad_cost()
         super().save(*args, **kwargs)

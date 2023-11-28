@@ -1,10 +1,8 @@
-import memcache
 import threading
 
 from PIL import Image
 from io import BytesIO
 
-from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -12,7 +10,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework import generics, permissions
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,7 +18,6 @@ from .filters import ClassifiedFilter
 from apps.user_searches.models import SearchQuery
 from .models import (
     APPROVED,
-    DRAFT,
     PENDING,
     Category,
     Classified,
@@ -138,7 +134,7 @@ class CreateClassifiedView(generics.CreateAPIView):
             category_id=category,
             title=title,
             owner=owner,
-            status=DRAFT
+            status=PENDING
         )
 
         classified_detail = ClassifiedDetail.objects.create(
@@ -184,9 +180,6 @@ class CreateClassifiedView(generics.CreateAPIView):
             thread.join()
 
         ClassifiedImage.objects.bulk_create(batch)
-
-        classified.status = PENDING
-        classified.save()
 
         return Response(status=204)
 

@@ -3,15 +3,14 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from django.contrib.auth import authenticate
-from apps.classifieds.models import Classified, ClassifiedDetail, ClassifiedImage
-from apps.classifieds.serializers import ClassifiedDetailSerializer
-from apps.payments.models import UserBalance
-
-from config.utility import check_user_type
-
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from apps.users.models import User
+from config.utility import check_user_type
+from apps.payments.models import UserBalance
+from apps.classifieds.serializers import ClassifiedDetailSerializer
+from apps.classifieds.models import Classified, ClassifiedDetail, ClassifiedImage
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class AdminLoginSerializer(TokenObtainPairSerializer):

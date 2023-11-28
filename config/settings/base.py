@@ -34,8 +34,8 @@ LOCAL_APPS = [
 
 THIRD_PARTY_APPS = [
     'payme',
-    'corsheaders',
     'drf_yasg',
+    'corsheaders',
     'rest_framework',
     'django_filters'
 ]

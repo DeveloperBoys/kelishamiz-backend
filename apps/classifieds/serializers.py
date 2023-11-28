@@ -2,7 +2,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from .models import (
-    DRAFT,
     PENDING,
     DELETED,
     Category,
@@ -75,9 +74,9 @@ class ClassifiedImageSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if not self.instance:
             classified = data['classified']
-            if classified.status != DRAFT:
+            if classified.status != DELETED:
                 raise serializers.ValidationError(
-                    'Classified image must be in draft status')
+                    'Classified image must be in deleted status')
 
         return data
 

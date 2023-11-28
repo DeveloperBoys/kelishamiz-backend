@@ -11,9 +11,21 @@ class Promotion(models.Model):
     name = models.CharField(max_length=100)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     views_multiplier = models.IntegerField()
-    duration = models.IntegerField(help_text="Duration in days")
     bump_ups = models.IntegerField(help_text="Number of ad bump ups")
-    vip_duration = models.IntegerField(help_text="Number of days in VIP ads")
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class VipPromotion(Promotion):
+    duration = models.IntegerField(help_text="Number of days in VIP ads")
+
+    class Meta:
+        verbose_name = "Vip Promotion"
+        verbose_name_plural = "Vip Promotions"
 
     def __str__(self):
         return self.name

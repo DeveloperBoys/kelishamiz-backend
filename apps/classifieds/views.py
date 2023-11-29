@@ -1,3 +1,4 @@
+import json
 import threading
 
 from PIL import Image
@@ -120,15 +121,16 @@ class CreateClassifiedView(generics.CreateAPIView):
             return None
 
     def post(self, request):
-        title = request.data.pop('title')
-        category = request.data.pop('category')
+        data = json.loads(request.data.copy())
+        title = data.pop('title')
+        category = data.pop('category')
         owner = request.user
-        dynamic_fields_data = request.data.pop('dynamicFields')
-        currency_type = request.data.pop('currencyType')
-        is_negotiable = request.data.pop('isNegotiable')
-        price = request.data.pop('price')
-        description = request.data.pop('description')
-        location = request.data.pop('location')
+        dynamic_fields_data = data.pop('dynamicFields')
+        currency_type = data.pop('currencyType')
+        is_negotiable = data.pop('isNegotiable')
+        price = data.pop('price')
+        description = data.pop('description')
+        location = data.pop('location')
 
         classified = Classified.objects.create(
             category_id=category,

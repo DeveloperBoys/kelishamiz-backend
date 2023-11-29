@@ -4,13 +4,14 @@ import threading
 from PIL import Image
 from io import BytesIO
 
+from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.pagination import PageNumberPagination
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -38,6 +39,8 @@ from .serializers import (
     DeleteClassifiedSerializer,
     ClassifiedCreateSerializer
 )
+from apps.classified_statistics.serializers import ClassifiedLikeSerializer
+from apps.classified_statistics.models import ClassifiedLike, ClassifiedView
 
 
 class ClassifiedPagination(PageNumberPagination):
@@ -98,7 +101,18 @@ class ClassifiedListView(generics.ListAPIView):
 class ClassifiedDetailView(generics.RetrieveAPIView):
     queryset = Classified.objects.filter(status=APPROVED)
     serializer_class = ClassifiedSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, ]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    def get_object(self):
+        obj = super().get_object()
+        ClassifiedView.objects.create(classified=obj)
+
+        return obj
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
@@ -115,10 +129,7 @@ class CreateClassifiedView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        try:
-            return Classified.objects.filter(classified=self.kwargs['pk'])
-        except:
-            return None
+        return Classified.objects.filter(classified=self.kwargs['pk'])
 
     def post(self, request):
         data = json.loads(request.data.copy())
@@ -184,6 +195,40 @@ class CreateClassifiedView(generics.CreateAPIView):
         ClassifiedImage.objects.bulk_create(batch)
 
         return Response(status=204)
+
+
+@method_decorator(cache_page(60*15), name='dispatch')
+class ClassifiedLikeView(generics.GenericAPIView):
+    serializer_class = ClassifiedLikeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            return get_object_or_404(
+                ClassifiedLike,
+                classified_id=self.kwargs['pk']
+            )
+        except:
+            return None
+
+    def get_object(self):
+        return get_object_or_404(
+            ClassifiedLike,
+            user=self.request.user,
+            classified_id=self.kwargs['pk']
+        )
+
+    def post(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.is_active = True
+        obj.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.is_active = False
+        obj.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @method_decorator(cache_page(60*15), name='dispatch')

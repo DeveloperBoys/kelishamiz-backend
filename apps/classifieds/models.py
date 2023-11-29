@@ -63,14 +63,26 @@ class Classified(Base):
         max_length=8, db_index=True, choices=CLASSIFIED_STATUS)
     title = models.CharField(max_length=150)
     slug = models.SlugField(max_length=250, blank=True, null=True)
-    is_liked = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Classified"
         verbose_name_plural = "Classifieds"
 
+    @property
+    def likes(self):
+        if not hasattr(self, '_likes'):
+            self._likes = self.classifiedlike_set.filter(
+                is_active=True).count()
+        return self._likes
+
+    @property
+    def views(self):
+        if not hasattr(self, '_views'):
+            self._views = self.classifiedview_set.count()
+        return self._views
+
     def __str__(self) -> str:
-        return self.title
+        return f"Classified ID: {self.id} - Title: {self.title}"
 
     def save(self, *args, **kwargs):
         if not self.slug:

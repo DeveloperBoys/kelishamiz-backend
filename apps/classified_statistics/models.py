@@ -27,6 +27,10 @@ class ClassifiedLike(models.Model):
     class Meta:
         verbose_name = "Classified Like"
         verbose_name_plural = "Classified Likes"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'classified'], name='unique_user_classified_like')
+        ]
 
     def __str__(self):
         return f"User: {self.user.full_name} - Classified: {self.classified.title}"

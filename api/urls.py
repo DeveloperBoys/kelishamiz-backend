@@ -2,7 +2,6 @@ from django.urls import include, path
 
 from apps.ads import views as ads_views
 from apps.users import views as user_views
-from apps.classified_statistics import views as likes_views
 from apps.admin_api import views as admin_views
 from apps.payments.views import OrderCreateView
 from apps.classifieds import views as classified_views
@@ -27,22 +26,8 @@ classified_urlpatterns = [
          name='create-classified'),
     path('classifieds/<int:pk>/edit/',
          classified_views.EditClassifiedView.as_view(), name='edit-classified'),
-    #     path('classifieds/<int:pk>/images/create/',
-    #          classified_views.CreateClassifiedImageView.as_view(), name='create-classified-image'),
-    #     path('classifieds/<int:pk>/images/edit/',
-    #          classified_views.EditClassifiedImageView.as_view(), name='edit-classified-image'),
-    #     path('classifieds/<int:pk>/details/create/',
-    #          classified_views.CreateClassifiedDetailView.as_view(), name='create-classified-detail'),
-    #     path('classifieds/<int:pk>/details/edit/',
-    #          classified_views.EditClassifiedDetailView.as_view(), name='edit-classified-detail'),
-]
-
-likes_urlpatterns = [
-    path('likes/create/', likes_views.CreateClassifiedLikeView.as_view(),
-         name='create-like'),
-    path('likes/get/', likes_views.GetClassifiedLikeView.as_view(), name='get-likes'),
-    path('likes/delete/<int:pk>/',
-         likes_views.DeleteClassifiedLikeView.as_view(), name='delete-like'),
+    path('classifieds/<int:pk>/like/',
+         classified_views.ClassifiedLikeView.as_view(), name='classified-likes'),
 ]
 
 
@@ -56,6 +41,8 @@ user_urlpatterns = [
     path('user/data/', user_views.UserDataView.as_view(), name='user-data'),
     path('user/searches/', user_views.UserSearchesView.as_view(),
          name='user-searches'),
+    path('user/liked-classifieds/', user_views.LikedClassifiedsView.as_view(),
+         name='liked-classifieds'),
     path('user/classifieds/', user_views.UserClassifiedsView.as_view(),
          name='user-classifieds'),
     path('user/change-information/', user_views.ChangeUserInformationView.as_view(),
@@ -113,7 +100,6 @@ ads_urlpatterns = [
 urlpatterns = (
     ads_urlpatterns +
     user_urlpatterns +
-    likes_urlpatterns +
     admin_urlpatterns +
     payments_urlpatterns +
     classified_urlpatterns +

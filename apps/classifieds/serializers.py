@@ -133,13 +133,13 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Classified
-        fields = ('id', 'category', 'owner', 'title', 'slug', 'images',
-                  'price', 'currencyType', 'isLiked', 'location', 'createdAt')
-        read_only_fields = ('id', 'slug')
+        fields = ('id', 'category', 'owner', 'title', 'slug', 'images', 'price',
+                  'currencyType', 'isLiked', 'views', 'location', 'createdAt')
+        read_only_fields = ('id', 'slug', 'views')
 
     def get_isLiked(self, obj):
-        user = self.request.user
-        if user.is_autenticated:
+        user = self.context.get('request').user
+        if user.is_authenticated:
             return obj.classifiedlike_set.filter(
                 user_id=user.id, is_active=True).exists()
         return False
@@ -193,10 +193,10 @@ class ClassifiedSerializer(serializers.ModelSerializer):
         return obj.category.pk
 
     def get_isLiked(self, obj):
-        if self.request.user.is_autenticated:
-            is_liked = ClassifiedLike.objects.filter(
-                classified=obj, user=self.request.user).last()
-            return is_liked.is_active
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return obj.classifiedlike_set.filter(
+                user_id=user.id, is_active=True).exists()
         return False
 
     def update(self, instance, validated_data):

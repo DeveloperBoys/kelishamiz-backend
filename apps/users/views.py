@@ -180,3 +180,18 @@ class ChangeUserInformationView(UpdateAPIView):
         self.perform_update(serializer)
 
         return Response(data={"detail": "Updated successfully"}, status=status.HTTP_200_OK)
+
+
+class LikedClassifiedsView(ListAPIView):
+    """
+    Returns classifieds liked by authenticated user
+    """
+    serializer_class = ClassifiedListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Classified.objects.filter(
+            classifiedlike__user=user,
+            classifiedlike__is_active=True
+        )

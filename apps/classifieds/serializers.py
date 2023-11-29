@@ -10,6 +10,7 @@ from .models import (
     ClassifiedImage,
     ClassifiedDetail,
 )
+from apps.classified_statistics.models import ClassifiedLike
 
 
 class ChildCategorySerializer(serializers.ModelSerializer):
@@ -126,7 +127,7 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
     currencyType = serializers.SerializerMethodField(read_only=True)
     images = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
-    isLiked = serializers.BooleanField(source='is_liked')
+    isLiked = serializers.SerializerMethodField(read_only=True)
     category = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField(read_only=True)
 
@@ -135,6 +136,13 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
         fields = ('id', 'category', 'owner', 'title', 'slug', 'images',
                   'price', 'currencyType', 'isLiked', 'location', 'createdAt')
         read_only_fields = ('id', 'slug')
+
+    def get_isLiked(self, obj):
+        user = self.request.user
+        if user.is_autenticated:
+            return obj.classifiedlike_set.filter(
+                user_id=user.id, is_active=True).exists()
+        return False
 
     def get_price(self, obj):
         classified_detail = ClassifiedDetail.objects.filter(
@@ -169,7 +177,7 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
 
 class ClassifiedSerializer(serializers.ModelSerializer):
     detail = ClassifiedDetailSerializer()
-    isLiked = serializers.BooleanField(source='is_liked')
+    isLiked = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     category = serializers.SerializerMethodField()
 
@@ -183,6 +191,13 @@ class ClassifiedSerializer(serializers.ModelSerializer):
         if request and request.method == 'GET':
             return obj.category.name
         return obj.category.pk
+
+    def get_isLiked(self, obj):
+        if self.request.user.is_autenticated:
+            is_liked = ClassifiedLike.objects.filter(
+                classified=obj, user=self.request.user).last()
+            return is_liked.is_active
+        return False
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)

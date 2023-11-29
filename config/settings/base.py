@@ -22,14 +22,14 @@ BASE_APPS = [
 
 LOCAL_APPS = [
     'apps.ads.apps.AdsConfig',
-    'apps.likes.apps.LikesConfig',
     'apps.users.apps.UsersConfig',
     'apps.admin_api.apps.AdminConfig',
     'apps.payments.apps.PaymentsConfig',
-    'apps.user_searches.apps.UserSearchesConfig',
     'apps.permissions.apps.PermissionsConfig',
     'apps.classifieds.apps.ClassifiedsConfig',
+    'apps.user_searches.apps.UserSearchesConfig',
     'apps.site_settings.apps.SiteSettingsConfig',
+    'apps.classified_statistics.apps.ClassifiedStatisticsConfig',
 ]
 
 THIRD_PARTY_APPS = [

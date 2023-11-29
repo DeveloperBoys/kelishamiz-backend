@@ -2,7 +2,7 @@ from django.urls import include, path
 
 from apps.ads import views as ads_views
 from apps.users import views as user_views
-from apps.likes import views as likes_views
+from apps.classified_statistics import views as likes_views
 from apps.admin_api import views as admin_views
 from apps.payments.views import OrderCreateView
 from apps.classifieds import views as classified_views

@@ -229,7 +229,8 @@ class DeleteClassifiedSerializer(serializers.ModelSerializer):
 class ClassifiedCreateSerializer(serializers.Serializer):
     category = serializers.IntegerField()
     title = serializers.CharField(max_length=150)
-    dynamicFields = DynamicFieldSerializer(many=True, write_only=True)
+    dynamicFields = DynamicFieldSerializer(
+        many=True, write_only=True, required=False)
     currencyType = serializers.CharField()
     isNegotiable = serializers.BooleanField(required=False)
     price = serializers.DecimalField(max_digits=12, decimal_places=2)

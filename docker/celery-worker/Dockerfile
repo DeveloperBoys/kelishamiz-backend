@@ -1,4 +1,4 @@
-FROM python:3.10.1
+FROM python:3.10-alpine
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -6,28 +6,32 @@ ENV PYTHONUNBUFFERED 1
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-RUN apt-get update && apt-get -y upgrade
-RUN apt-get install -y gcc
-RUN apt-get install -y g++
-RUN apt-get install -y build-essential
-RUN apt-get install -y wget
+RUN apk update && apk upgrade
+RUN apk add --no-cache gcc g++ build-base wget
 
 USER root
-RUN useradd -ms /bin/bash celery
-RUN usermod -a -G celery celery
-RUN usermod -a -G celery root
+RUN adduser -D celery
+RUN addgroup celery celery
+RUN addgroup root celery
 
 WORKDIR /usr/src/app
 COPY ./ ./
 
-RUN pip install -r ./requirements.txt
+COPY ./backend/poetry.lock ./backend/pyproject.toml ./
+RUN pip install poetry
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
 
 COPY ./docker/celery/celeryd /etc/init.d/
 COPY ./docker/celery/celerybeat /etc/init.d/
 COPY ./docker/celery/config/celeryd /etc/default/
-RUN ["chmod", "755", "/etc/init.d/celeryd"]
-RUN ["chmod", "755", "/etc/init.d/celerybeat"]
-RUN ["chmod", "640", "/etc/default/celeryd"]
+RUN chmod 755 /etc/init.d/celeryd
+RUN chmod 755 /etc/init.d/celerybeat
+RUN chmod 640 /etc/default/celeryd
 
-RUN ["chmod", "+x", "./docker/celery-worker/entry.sh"]
-ENTRYPOINT ["./docker/celery-worker/entry.sh"]
+COPY ./docker/celery-worker/entry.sh /usr/src/app
+RUN chmod +x /usr/src/app/entry.sh
+
+ENTRYPOINT ["/usr/src/app/entry.sh"]
+
+

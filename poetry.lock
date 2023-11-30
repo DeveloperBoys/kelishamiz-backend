@@ -915,13 +915,13 @@ files = [
 
 [[package]]
 name = "payme-pkg"
-version = "2.6.4"
+version = "2.6.5"
 description = ""
 optional = false
 python-versions = "*"
 files = [
-    {file = "payme-pkg-2.6.4.tar.gz", hash = "sha256:82a330ddb83d3ebe95411e3926b77e9dca8e5d4c1aa41090e9131f03317b0bf7"},
-    {file = "payme_pkg-2.6.4-py3-none-any.whl", hash = "sha256:e6907c95ad22fad8528c98850dddea2dba991bf47fbfd9d41576bf47e322bc95"},
+    {file = "payme-pkg-2.6.5.tar.gz", hash = "sha256:af375f90da3cfbe55d984b5562db907141c08bbf5bdfae1fce06a284a9ef95e3"},
+    {file = "payme_pkg-2.6.5-py3-none-any.whl", hash = "sha256:5198d0d71354d20692bf2548e4bfc172cb7440d41dc2b640fe600c8d4c0961c1"},
 ]
 
 [package.dependencies]
@@ -1154,20 +1154,6 @@ files = [
 
 [package.extras]
 cli = ["click (>=5.0)"]
-
-[[package]]
-name = "python-memcached"
-version = "1.59"
-description = "Pure python memcached client"
-optional = false
-python-versions = "*"
-files = [
-    {file = "python-memcached-1.59.tar.gz", hash = "sha256:a2e28637be13ee0bf1a8b6843e7490f9456fd3f2a4cb60471733c7b5d5557e4f"},
-    {file = "python_memcached-1.59-py2.py3-none-any.whl", hash = "sha256:4dac64916871bd3550263323fc2ce18e1e439080a2d5670c594cf3118d99b594"},
-]
-
-[package.dependencies]
-six = ">=1.4.0"
 
 [[package]]
 name = "pytz"
@@ -1482,4 +1468,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a6df68fd56704f7278d2bb2692c7b9be861ab96b0e760a9a5b9b666929c417eb"
+content-hash = "39715ea42c3845e3d8e2d18b5a89fa4599a4ce725f7565d9fb8c34fde9b2037c"

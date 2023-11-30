@@ -21,9 +21,8 @@ django-cors-headers = "^4.3.0"
 celery = "^5.3.4"
 psycopg2-binary = "^2.9.9"
 drf-nested-routers = "^0.93.4"
-python-memcached = "^1.59"
-payme-pkg = "^2.6.4"
 aiohttp = "^3.9.1"
+payme-pkg = "^2.6.5"
 
 
 [build-system]

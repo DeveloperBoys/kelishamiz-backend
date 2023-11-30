@@ -74,15 +74,29 @@ services:
 
   nginx:
     image: nginx
-    build: docker/nginx/Dockerfile
+    build:
+      context: ./docker/nginx
     volumes:
       - static:/static
+      - certbot-web:/vol/www
+      - proxy-dhparams:/vol/www
+      - certbot-certs:/etc/letsencrypt
     ports:
       - "80:80"
     depends_on:
       - backend
     networks:
       - backend
+
+  certbot:
+    build:
+      context: ./docker/certbot
+    command: echo "Skipping..."
+    volumes:
+      - certbot-web:/vol/www
+      - certbot-certs:/etc/letsencrypt
+    depends_on:
+      - nginx
 
   celery-worker:
     restart: always
@@ -123,3 +137,6 @@ networks:
 volumes:
   postgres:
   pgadmin:
+  certbot-web:
+  proxy-dhparams:
+  certbot-certs:

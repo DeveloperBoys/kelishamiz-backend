@@ -72,10 +72,10 @@ services:
     depends_on:
       - postgres
 
-  nginx:
-    image: nginx
+  proxy:
     build:
-      context: ./docker/nginx
+      context: ./docker/proxy
+    restart: always
     volumes:
       - static:/static
       - certbot-web:/vol/www
@@ -83,6 +83,7 @@ services:
       - certbot-certs:/etc/letsencrypt
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     networks:
@@ -96,7 +97,7 @@ services:
       - certbot-web:/vol/www
       - certbot-certs:/etc/letsencrypt
     depends_on:
-      - nginx
+      - proxy
 
   celery-worker:
     restart: always

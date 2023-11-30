@@ -132,16 +132,15 @@ class CreateClassifiedView(generics.CreateAPIView):
         return Classified.objects.filter(classified=self.kwargs['pk'])
 
     def post(self, request):
-        data = json.loads(request.data.copy())
-        title = data.pop('title')
-        category = data.pop('category')
+        title = request.data.get('title')
+        category = request.data.get('category')
         owner = request.user
-        dynamic_fields_data = data.pop('dynamicFields')
-        currency_type = data.pop('currencyType')
-        is_negotiable = data.pop('isNegotiable')
-        price = data.pop('price')
-        description = data.pop('description')
-        location = data.pop('location')
+        dynamic_fields_data = request.data.get('dynamicFields')
+        currency_type = request.data.get('currencyType')
+        is_negotiable = request.data.get('isNegotiable')
+        price = request.data.get('price')
+        description = request.data.get('description')
+        location = request.data.get('location')
 
         classified = Classified.objects.create(
             category_id=category,

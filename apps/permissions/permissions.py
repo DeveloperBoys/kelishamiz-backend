@@ -3,7 +3,7 @@ from rest_framework import permissions
 from apps.classifieds.models import DELETED
 
 
-class PublishedClassifiedPermission(permissions.BasePermission):
+class EditClassifiedPermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.method in ['GET', 'PUT', 'PATCH', 'DELETE'] and obj.status != DELETED

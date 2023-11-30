@@ -236,7 +236,9 @@ class ClassifiedCreateSerializer(serializers.Serializer):
     price = serializers.DecimalField(max_digits=12, decimal_places=2)
     description = serializers.CharField()
     location = serializers.IntegerField()
-    images = ClassifiedImageSerializer(many=True)
+    images = serializers.ListField(
+        child=serializers.ImageField(allow_empty_file=False)
+    )
 
     def validate_currencyType(self, currency_type):
         if currency_type != "usd" or "uzs":

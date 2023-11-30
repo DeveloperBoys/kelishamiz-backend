@@ -20,12 +20,8 @@ classified_urlpatterns = [
          name='classified-list'),
     path('classifieds/<int:pk>/', classified_views.ClassifiedDetailView.as_view(),
          name='classified-detail'),
-    path('classifieds/<int:pk>/delete/',
-         classified_views.DeleteClassifiedView.as_view(), name='delete-classified'),
     path('classifieds/create/', classified_views.CreateClassifiedView.as_view(),
          name='create-classified'),
-    path('classifieds/<int:pk>/edit/',
-         classified_views.EditClassifiedView.as_view(), name='edit-classified'),
     path('classifieds/<int:pk>/like/',
          classified_views.ClassifiedLikeView.as_view(), name='classified-likes'),
 ]
@@ -45,6 +41,10 @@ user_urlpatterns = [
          name='liked-classifieds'),
     path('user/classifieds/', user_views.UserClassifiedsView.as_view(),
          name='user-classifieds'),
+    path('user/classifieds/<int:pk>/',
+         classified_views.EditClassifiedView.as_view(), name='edit-user-classified'),
+    path('user/classifieds/<int:pk>/delete/',
+         classified_views.DeleteClassifiedView.as_view(), name='delete-user-classified'),
     path('user/change-information/', user_views.ChangeUserInformationView.as_view(),
          name='change_user_information'),
 ]

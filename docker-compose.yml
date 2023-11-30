@@ -24,6 +24,7 @@ services:
       - "5555:5555"
 
   backend:
+    container_name: backend_container
     image: backend
     volumes:
       - static:/static

@@ -1,12 +1,12 @@
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
-from payme.models import MerchatTransactionsModel
+from payme.models import MerchantTransactionsModel
 
 from .models import CustomOrder, UserBalance
 
 
-@receiver(post_save, sender=MerchatTransactionsModel)
+@receiver(post_save, sender=MerchantTransactionsModel)
 def update_user_balance(sender, instance, created, **kwargs):
     if instance.state == 2:
         order = CustomOrder.objects.get(id=instance.order_id)

@@ -23,6 +23,8 @@ psycopg2-binary = "^2.9.9"
 drf-nested-routers = "^0.93.4"
 aiohttp = "^3.9.1"
 payme-pkg = "^2.6.5"
+redis = "^5.0.1"
+flower = "^2.0.1"
 
 
 [build-system]

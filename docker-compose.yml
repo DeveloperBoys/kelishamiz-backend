@@ -4,7 +4,7 @@ services:
 
   flower:
     build:
-      context: .
+      context: ./
       dockerfile: docker/celery-flower/Dockerfile
     environment:
       DATABASE_NAME: ${DB_NAME}
@@ -27,12 +27,13 @@ services:
     container_name: backend_container
     image: backend
     volumes:
+      - .:/usr/src/app
       - static:/static
       - media:/app/config/media
     env_file:
       - .env
     build:
-      context: .
+      context: ./
       dockerfile: docker/backend/Dockerfile
     depends_on:
       - celery-worker
@@ -40,6 +41,7 @@ services:
     networks:
       - postgres
       - redis
+      - backend
     ports:
       - "8000:8000"
 
@@ -78,10 +80,9 @@ services:
       context: ./docker/proxy
     restart: always
     volumes:
-      - static:/static
-      - certbot-web:/vol/www
-      - proxy-dhparams:/vol/www
-      - certbot-certs:/etc/letsencrypt
+      - "/etc/letsencrypt:/etc/letsencrypt"
+      - "/var/lib/letsencrypt:/var/lib/letsencrypt"
+      - "static:/static"
     ports:
       - "80:80"
       - "443:443"
@@ -89,21 +90,13 @@ services:
       - backend
     networks:
       - backend
-
-  certbot:
-    build:
-      context: ./docker/certbot
-    command: echo "Skipping..."
-    volumes:
-      - certbot-web:/vol/www
-      - certbot-certs:/etc/letsencrypt
-    depends_on:
-      - proxy
+    environment:
+      - DOMAIN=${DOMAIN}
 
   celery-worker:
     restart: always
     build:
-      context: .
+      context: ./
       dockerfile: docker/celery-worker/Dockerfile
     volumes:
       - .:/usr/src/app
@@ -124,11 +117,13 @@ services:
       - celery-worker
 
   redis:
-    image: "redis:alpine"
+    restart: unless-stopped
+    image: redis:7-alpine
     networks:
       - redis
 
 networks:
+  backend:
   postgres:
     driver: bridge
   redis:
@@ -139,6 +134,5 @@ networks:
 volumes:
   postgres:
   pgadmin:
-  certbot-web:
-  proxy-dhparams:
-  certbot-certs:
+  static:
+  media:

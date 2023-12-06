@@ -103,6 +103,20 @@ If you prefer to use Docker for running the project, follow these steps:
    docker run -p 8000:8000 --env-file .env kelishamiz-backend
    ```
 
+3. **Install Certbot on your server. The easiest way is to run:**
+
+   ```bash
+   docker run -it --rm -p 443:443 -p 80:80 --name certbot -v "/etc/letsencrypt:/etc/letsencrypt" -v "/var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot certonly
+   ```
+
+4. **Rebuild and restart your stack:**
+
+   ```bash
+   docker-compose down
+   docker-compose build
+   docker-compose up -d
+   ```
+
 # Contributing
 
 We welcome contributions to enhance the functionality and features of the backend. Please refer to the [CONTRIBUTING.md](Readme/CONTRIBUTING.md) file for guidelines.

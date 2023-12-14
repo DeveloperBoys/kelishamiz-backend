@@ -1,5 +1,6 @@
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
@@ -9,6 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import ClassifiedFilter
+from .tasks import upload_classified_images
 from apps.user_searches.models import SearchQuery
 from .models import (
     APPROVED,
@@ -119,8 +121,14 @@ class CreateClassifiedView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        images = request.FILES.getlist('images')
-        serializer.save(owner=request.user, images=images)
+        classified = serializer.save(owner=request.user)
+
+        images = [SimpleUploadedFile(f.name, f.read())
+                  for f in request.FILES.getlist('images')]
+        upload_classified_images.delay(
+            classified=classified,
+            uploaded_files=images
+        )
 
         return Response(status=status.HTTP_201_CREATED)
 

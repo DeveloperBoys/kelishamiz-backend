@@ -234,6 +234,7 @@ class ClassifiedCreateSerializer(serializers.Serializer):
     price = serializers.DecimalField(max_digits=12, decimal_places=2)
     description = serializers.CharField()
     location = serializers.IntegerField()
+    images = ClassifiedImageSerializer(many=True)
 
     def create(self, validated_data):
         dynamic_fields = validated_data.pop('dynamicFields', [])

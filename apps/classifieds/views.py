@@ -119,8 +119,8 @@ class CreateClassifiedView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        serializer.save(owner=request.user)
+        images = request.FILES.getlist('images')
+        serializer.save(owner=request.user, images=images)
 
         return Response(status=status.HTTP_201_CREATED)
 

@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from .tasks import upload_classified_images
 from .models import (
     PENDING,
     DELETED,
@@ -234,7 +233,7 @@ class ClassifiedCreateSerializer(serializers.Serializer):
     price = serializers.DecimalField(max_digits=12, decimal_places=2)
     description = serializers.CharField()
     location = serializers.IntegerField()
-    images = ClassifiedImageSerializer(many=True)
+    images = ClassifiedImageSerializer(many=True, required=False)
 
     def create(self, validated_data):
         dynamic_fields = validated_data.pop('dynamicFields', [])
@@ -246,7 +245,6 @@ class ClassifiedCreateSerializer(serializers.Serializer):
         title = validated_data.pop('title')
         category = validated_data.pop('category')
         user = validated_data.pop('owner')
-        images = validated_data.pop('images', [])
 
         classified = Classified.objects.create(
             category_id=category,
@@ -266,11 +264,6 @@ class ClassifiedCreateSerializer(serializers.Serializer):
         for dynamic_field in dynamic_fields:
             DynamicField.objects.create(
                 classified_detail=classified_detail, **dynamic_field)
-
-        image_data_list = [
-            {'name': f.name, 'content': f.read()} for f in images
-        ]
-        upload_classified_images.delay(classified.id, image_data_list)
 
         classified.status = PENDING
         classified.save()

@@ -5,10 +5,8 @@ from PIL import Image
 from io import BytesIO
 
 from celery import shared_task
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from .serializers import ClassifiedSerializer
 from .models import Classified, ClassifiedImage
 
 
@@ -26,6 +24,8 @@ async def notify_bot(classified_data):
 @shared_task
 def trigger_bot_notification(classified_id):
     classified = Classified.objects.get(id=classified_id)
+
+    from .serializers import ClassifiedSerializer
 
     serializer = ClassifiedSerializer(classified)
     data = serializer.data

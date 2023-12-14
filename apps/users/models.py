@@ -114,7 +114,7 @@ class User(AbstractUser, BaseModel):
         upload_to='uploads/user', blank=True, null=True
     )
     father_name = models.CharField(
-        _("father name"), max_length=150, blank=True
+        _("father name"), max_length=150, blank=True, null=True
     )
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(

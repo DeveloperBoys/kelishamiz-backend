@@ -6,7 +6,7 @@ from .models import ClassifiedLike, ClassifiedView
 class ClassifiedLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassifiedLike
-        fields = ('id', 'classified', )
+        fields = ('id',)
         read_only_fields = ('id',)
 
 

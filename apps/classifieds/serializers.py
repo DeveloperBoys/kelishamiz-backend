@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
+from .tasks import upload_classified_images
 from .models import (
     PENDING,
     DELETED,
@@ -10,7 +10,6 @@ from .models import (
     ClassifiedImage,
     ClassifiedDetail,
 )
-from apps.classified_statistics.models import ClassifiedLike
 
 
 class ChildCategorySerializer(serializers.ModelSerializer):
@@ -229,19 +228,50 @@ class DeleteClassifiedSerializer(serializers.ModelSerializer):
 class ClassifiedCreateSerializer(serializers.Serializer):
     category = serializers.IntegerField()
     title = serializers.CharField(max_length=150)
-    dynamicFields = DynamicFieldSerializer(
-        many=True, write_only=True, required=False)
+    dynamicFields = DynamicFieldSerializer(many=True, required=False)
     currencyType = serializers.CharField()
     isNegotiable = serializers.BooleanField(required=False)
     price = serializers.DecimalField(max_digits=12, decimal_places=2)
     description = serializers.CharField()
     location = serializers.IntegerField()
-    images = serializers.ListField(
-        child=serializers.ImageField(allow_empty_file=False)
-    )
 
-    def validate_currencyType(self, currency_type):
-        if currency_type != "usd" or "uzs":
-            raise ValidationError(
-                "The currencyType you entered is incorrect. It only accepts usd or uzs."
-            )
+    def create(self, validated_data):
+        dynamic_fields = validated_data.pop('dynamicFields', [])
+        currency_type = validated_data.pop('currencyType')
+        is_negotiable = validated_data.pop('isNegotiable', False)
+        price = validated_data.pop('price')
+        description = validated_data.pop('description')
+        location_id = validated_data.pop('location')
+        title = validated_data.pop('title')
+        category = validated_data.pop('category')
+        user = validated_data.pop('owner')
+        images = validated_data.pop('images', [])
+
+        classified = Classified.objects.create(
+            category_id=category,
+            title=title,
+            owner=user
+        )
+
+        classified_detail = ClassifiedDetail.objects.create(
+            classified=classified,
+            currency_type=currency_type,
+            is_negotiable=is_negotiable,
+            price=price,
+            description=description,
+            location_id=location_id
+        )
+
+        for dynamic_field in dynamic_fields:
+            DynamicField.objects.create(
+                classified_detail=classified_detail, **dynamic_field)
+
+        image_data_list = [
+            {'name': f.name, 'content': f.read()} for f in images
+        ]
+        upload_classified_images.delay(classified.id, image_data_list)
+
+        classified.status = PENDING
+        classified.save()
+
+        return classified

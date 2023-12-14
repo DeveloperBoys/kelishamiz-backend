@@ -8,10 +8,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from ninja.errors import HttpError
 
-from ..models import (
+from apps.classifieds.models import (
     APPROVED,
     DELETED,
-    DRAFT,
     PENDING,
     Classified,
     DynamicField,
@@ -128,7 +127,7 @@ class ClassifiedDetailService:
 
     def create(self, payload, classified_id):
         classified = get_object_or_404(Classified, pk=classified_id)
-        if payload and classified.status == DRAFT:
+        if payload and classified.status == PENDING:
             dynamic_fields = payload.pop('dynamicFields')
             classified_detail = ClassifiedDetail.objects.create(
                 classified=classified,

@@ -1,4 +1,4 @@
-from ..models import Category
+from apps.classifieds.models import Category
 
 
 class CategoryService:

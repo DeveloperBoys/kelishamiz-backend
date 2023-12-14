@@ -1,40 +1,19 @@
 from django.db import models
 from django.conf import settings
+from django.utils.text import slugify
 from django.contrib.auth import get_user_model
 
 from .base import Base
+from .category import Category
+from apps.site_settings.models import Locations
 
 
 User = get_user_model()
 
 
-DRAFT, PENDING, APPROVED, REJECTED, DELETED = (
-    "draft", "pending", "approved", "rejected", "deleted"
+PENDING, APPROVED, REJECTED, DELETED = (
+    "pending", "approved", "rejected", "deleted"
 )
-
-
-class Category(Base):
-    """
-    Category model to represent main categories and subcategories.
-    """
-    name = models.CharField(max_length=250)
-    parent = models.ForeignKey(
-        'self', on_delete=models.CASCADE, related_name='children', null=True, blank=True)
-    icon = models.FileField(
-        upload_to='classifieds/category/icons/', null=True, blank=True)
-
-    class Meta:
-        verbose_name = "Category"
-        verbose_name_plural = "Categories"
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def icon_url(self):
-        if self.icon:
-            return f"{settings.HOST}{self.icon.url}"
-        return None
 
 
 class Classified(Base):
@@ -42,7 +21,6 @@ class Classified(Base):
     Classified model to store basic classifieds information.
     """
     CLASSIFIED_STATUS = (
-        (DRAFT, DRAFT),
         (PENDING, PENDING),
         (APPROVED, APPROVED),
         (REJECTED, REJECTED),
@@ -52,22 +30,34 @@ class Classified(Base):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(
-        max_length=8, db_index=True, choices=CLASSIFIED_STATUS, default=DRAFT)
+        max_length=8, db_index=True, choices=CLASSIFIED_STATUS)
     title = models.CharField(max_length=150)
-    is_liked = models.BooleanField(default=False)
+    slug = models.SlugField(max_length=250, blank=True, null=True)
 
     class Meta:
         verbose_name = "Classified"
         verbose_name_plural = "Classifieds"
 
+    @property
+    def likes(self):
+        if not hasattr(self, '_likes'):
+            self._likes = self.classifiedlike_set.filter(
+                is_active=True).count()
+        return self._likes
+
+    @property
+    def views(self):
+        if not hasattr(self, '_views'):
+            self._views = self.classifiedview_set.count()
+        return self._views
+
     def __str__(self) -> str:
-        return self.title
+        return f"Classified ID: {self.id} - Title: {self.title}"
 
-    def can_edit(self):
-        return self.status == DRAFT
-
-    def can_delete(self):
-        return self.status == DRAFT
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
 
 class ClassifiedDetail(Base):
@@ -81,8 +71,10 @@ class ClassifiedDetail(Base):
     price = models.DecimalField(max_digits=12, decimal_places=2)
     is_negotiable = models.BooleanField(default=False)
     description = models.TextField()
+    location = models.ForeignKey(Locations, on_delete=models.CASCADE)
 
     class Meta:
+        unique_together = []
         verbose_name = "Classified Detail"
         verbose_name_plural = "Classified Details"
 
@@ -91,7 +83,7 @@ class ClassifiedImage(Base):
     """
     ClassifiedImage model to associate images with classifieds.
     """
-    classified = models.ForeignKey(Classified, related_name='classifiedimage_set',
+    classified = models.ForeignKey(Classified, related_name='images',
                                    on_delete=models.CASCADE)
     image = models.ImageField(upload_to='classifieds/images/')
 

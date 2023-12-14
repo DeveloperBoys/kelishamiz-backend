@@ -26,9 +26,8 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
-    'apps.likes.apps.LikesConfig',
+    'api.apps.ApiConfig',
     'apps.users.apps.UsersConfig',
-    'apps.promotions.apps.PromotionsConfig',
     'apps.user_searches.apps.UserSearchesConfig',
     'apps.permissions.apps.PermissionsConfig',
     'apps.classifieds.apps.ClassifiedsConfig',
@@ -37,6 +36,7 @@ LOCAL_APPS = [
 
 THIRD_PARTY_APPS = [
     'corsheaders',
+    'ninja_jwt',
     'ninja_extra',
     'django_filters',
 ]

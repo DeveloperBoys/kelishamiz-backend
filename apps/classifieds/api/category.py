@@ -5,8 +5,8 @@ from ninja.files import UploadedFile
 from ninja_extra import api_controller, route, permissions
 
 
-from classifieds.services import CategoryService
-from classifieds.schemas import CategoryIn, CategoryOut
+from apps.classifieds.services import CategoryService
+from apps.classifieds.schemas import CategoryIn, CategoryOut
 
 
 @api_controller('/categories', tags=['Categories'])

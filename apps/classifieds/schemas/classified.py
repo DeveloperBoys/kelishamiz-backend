@@ -4,8 +4,7 @@ from datetime import datetime
 
 from ninja import Schema, Field
 
-from ..models import (
-    DRAFT,
+from apps.classifieds.models import (
     PENDING,
     REJECTED,
     APPROVED,
@@ -14,7 +13,6 @@ from ..models import (
 
 
 class ClassifiedStatus(str, Enum):
-    DRAFT = DRAFT
     PENDING = PENDING
     APPROVED = APPROVED
     REJECTED = REJECTED

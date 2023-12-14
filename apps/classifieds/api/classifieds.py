@@ -7,8 +7,8 @@ from ninja.files import UploadedFile
 from ninja_extra import api_controller, route, permissions
 
 
-from classifieds.schemas import ClassifiedOut, CreateClassified, ReturnCreatedClassified
-from classifieds.services import ClassifiedService, ClassifiedImageService, ClassifiedDetailService
+from apps.classifieds.schemas import ClassifiedOut, CreateClassified, ReturnCreatedClassified
+from apps.classifieds.services import ClassifiedService, ClassifiedImageService, ClassifiedDetailService
 
 
 @api_controller('/classifieds', tags=['Classifieds'])

@@ -17,6 +17,7 @@ from apps.classifieds.models import (
     ClassifiedImage,
     ClassifiedDetail
 )
+from apps.classifieds.tasks import upload_classified_images
 
 
 class ClassifiedService:
@@ -34,14 +35,30 @@ class ClassifiedService:
             raise HttpError(404, "No classifieds found")
         return classified
 
-    def create(self, payload, owner):
+    def create(self, payload, owner, images):
         if payload and owner:
-            return Classified.objects.create(
+            classified = Classified.objects.create(
                 category_id=payload.category,
                 title=payload.category,
                 owner_id=owner
             )
-        return 404
+
+            detail = ClassifiedDetail.objects.create(
+                classified=classified,
+                currency_type=payload.currency_type,
+                price=payload.price,
+                is_negotiable=payload.is_negotiable,
+                description=payload.description,
+                location=payload.location
+            )
+            dynamic_fields = payload.dynamic_fields
+            for dynamic_field in dynamic_fields:
+                DynamicField.objects.create(
+                    classified_detail=detail,
+                    **dynamic_field
+                )
+            upload_classified_images.delay(classified, images)
+        return classified
 
     def update(self, classified_id, payload):
         classified = Classified.objects.get(pk=classified_id)

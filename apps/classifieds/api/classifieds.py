@@ -36,9 +36,10 @@ class ClassifiedAPI:
     def create(
         self,
         payload: CreateClassified,
+        images: List[UploadedFile] = File(...)
     ) -> ReturnCreatedClassified:
         # owner = self.request.user
-        return self.service.create(payload, 1)
+        return self.service.create(payload, 1, images)
 
     @route.put('')
     def update(
@@ -55,8 +56,3 @@ class ClassifiedAPI:
     ) -> ReturnCreatedClassified:
         # owner = self.request.user
         return self.service.partial_update(payload, 1)
-
-
-@api_controller('/classifieds/<int:pk>/images', tags=['Classified Images'])
-class ClassifiedImageAPI:
-    ...

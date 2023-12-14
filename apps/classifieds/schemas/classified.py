@@ -39,27 +39,21 @@ class ClassifiedImageBase(Schema):
 
 class ClassifiedImageOut(Schema):
     id: int | None
-    image_url: str = Field(None, alias="image_url")
+    image_url: str = Field(None, alias="imageUrl")
 
 
 class ClassifiedDetailBase(Schema):
     id: int | None
 
 
-class CreateClassifiedDetail(ClassifiedDetailBase):
-    currency_type: CurrencyType
-    price: float
-    is_negotiable: bool = False
-    description: str
-
-
 class ClassifiedDetailOut(ClassifiedDetailBase):
-    currency_type: CurrencyType
+    currency_type: CurrencyType = Field(alias="currencyType")
     price: float
-    is_negotiable: bool = False
+    is_negotiable: bool = Field(default=False, alias="isNegotiable")
     description: str
+    location: str
     dynamic_fields: List[DynamicFieldOut] = Field(
-        None, alias="dynamicfield_set")
+        None, alias="dynamicFields")
 
 
 class ClassifiedBase(Schema):
@@ -67,20 +61,26 @@ class ClassifiedBase(Schema):
 
 
 class CreateClassified(Schema):
-    category: int | None
-    title: str | None
+    category: int = Field(default=None)
+    title: str
+    dynamic_fields: List[DynamicFieldBase] = Field(
+        None, alias="dynamicFields")
+    currency_type: CurrencyType = Field(alias="currencyType")
+    is_negotiable: bool = Field(default=False, alias="isNegotiable")
+    price: float
+    description: str
+    location: int
 
 
 class ReturnCreatedClassified(ClassifiedBase):
-    category: int = Field(None, alias="category_id")
+    category: int = Field(None, alias="categoryId")
     title: str | None
 
 
 class ClassifiedOut(ClassifiedBase):
-    category: int = Field(None, alias="category_id")
+    category: int = Field(None, alias="categoryId")
     title: str | None
-    is_liked: bool = False
+    is_liked: bool = Field(default=False, alias="isLiked")
     detail: ClassifiedDetailOut = None
-    created_at: datetime
-    images: List[ClassifiedImageOut] = Field(
-        None, alias="classifiedimage_set")
+    created_at: datetime = Field(alias="createdAt")
+    images: List[ClassifiedImageOut] = None

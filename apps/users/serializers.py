@@ -105,7 +105,8 @@ class UserDataSerializer(serializers.ModelSerializer):
 class ChangeUserInformationSerializer(serializers.Serializer):
     firstName = serializers.CharField(write_only=True, required=True)
     lastName = serializers.CharField(write_only=True, required=True)
-    profileImage = serializers.FileField(write_only=True, required=False)
+    profileImage = serializers.FileField(
+        write_only=True, required=False, allow_null=True)
     fatherName = serializers.CharField(
         write_only=True, required=False, allow_null=True)
     email = serializers.EmailField(write_only=True, required=True)

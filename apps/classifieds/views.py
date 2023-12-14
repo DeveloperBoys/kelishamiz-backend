@@ -1,7 +1,5 @@
-from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
-from django.core.files.uploadedfile import SimpleUploadedFile
 
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
@@ -11,15 +9,11 @@ from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import ClassifiedFilter
-from .tasks import upload_classified_images
 from apps.user_searches.models import SearchQuery
 from .models import (
     APPROVED,
-    PENDING,
     Category,
-    Classified,
-    ClassifiedDetail,
-    DynamicField,
+    Classified
 )
 from apps.permissions.permissions import (
     ClassifiedOwner,
@@ -122,42 +116,13 @@ class CreateClassifiedView(generics.CreateAPIView):
     serializer_class = ClassifiedCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        title = request.data.get('title')
-        category = request.data.get('category')
-        owner = request.user
-        dynamic_fields_data = request.data.get('dynamicFields')
-        currency_type = request.data.get('currencyType')
-        is_negotiable = request.data.get('isNegotiable', '').lower() == 'true'
-        price = request.data.get('price')
-        description = request.data.get('description')
-        location = request.data.get('location')
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        classified = Classified.objects.create(
-            category_id=category,
-            title=title,
-            owner=owner,
-            status=PENDING
-        )
+        serializer.save(owner=request.user)
 
-        classified_detail = ClassifiedDetail.objects.create(
-            classified=classified,
-            currency_type=currency_type,
-            is_negotiable=is_negotiable,
-            price=price,
-            description=description,
-            location_id=location
-        )
-
-        for dynamic_field_data in dynamic_fields_data:
-            DynamicField.objects.create(
-                classified_detail=classified_detail, **dynamic_field_data)
-
-        uploaded_files = [SimpleUploadedFile(f.name, f.read())
-                          for f in request.FILES.getlist('images')]
-        upload_classified_images.delay(classified.id, uploaded_files)
-
-        return Response(status=204)
+        return Response(status=status.HTTP_201_CREATED)
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
@@ -166,32 +131,27 @@ class ClassifiedLikeView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        try:
-            return get_object_or_404(
-                ClassifiedLike,
-                classified_id=self.kwargs['pk']
-            )
-        except:
-            return None
-
-    def get_object(self):
-        return get_object_or_404(
-            ClassifiedLike,
-            user=self.request.user,
+        return ClassifiedLike.objects.filter(
             classified_id=self.kwargs['pk']
         )
 
     def post(self, request, *args, **kwargs):
-        obj = self.get_object()
+        obj, created = ClassifiedLike.objects.get_or_create(
+            classified_id=self.kwargs['pk'],
+            user=self.request.user
+        )
         obj.is_active = True
         obj.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     def delete(self, request, *args, **kwargs):
-        obj = self.get_object()
+        obj, created = ClassifiedLike.objects.get_or_create(
+            classified_id=self.kwargs['pk'],
+            user=self.request.user
+        )
         obj.is_active = False
         obj.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 @method_decorator(cache_page(60*15), name='dispatch')

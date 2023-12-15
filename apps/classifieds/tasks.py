@@ -36,7 +36,7 @@ def trigger_bot_notification(classified_id):
 
 
 @shared_task
-def upload_classified_images(classified, uploaded_files):
+def upload_classified_images(classified_id, uploaded_files):
     batch = []
 
     for file in uploaded_files:
@@ -48,7 +48,7 @@ def upload_classified_images(classified, uploaded_files):
         optimized_file = SimpleUploadedFile(
             file.name, output.read())
         image = ClassifiedImage(
-            classified=classified,
+            classified_id=classified_id,
             image=optimized_file
         )
         batch.append(image)

@@ -126,7 +126,7 @@ class CreateClassifiedView(generics.CreateAPIView):
         images = [SimpleUploadedFile(f.name, f.read())
                   for f in request.FILES.getlist('images')]
         upload_classified_images.delay(
-            classified=classified,
+            classified_id=classified.pk,
             uploaded_files=images
         )
 

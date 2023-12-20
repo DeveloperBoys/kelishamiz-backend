@@ -9,6 +9,7 @@ from .models import (
     ClassifiedImage,
     ClassifiedDetail,
 )
+from apps.site_settings.models import Locations
 
 
 class ChildCategorySerializer(serializers.ModelSerializer):
@@ -225,47 +226,90 @@ class DeleteClassifiedSerializer(serializers.ModelSerializer):
 
 
 class ClassifiedCreateSerializer(serializers.Serializer):
-    category = serializers.IntegerField()
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all()
+    )
     title = serializers.CharField(max_length=150)
+
     dynamicFields = DynamicFieldSerializer(many=True, required=False)
-    currencyType = serializers.CharField()
-    isNegotiable = serializers.BooleanField(required=False)
+    images = ClassifiedImageSerializer(many=True, required=False)
+
+    currencyType = serializers.ChoiceField(
+        choices=(("USD", "usd"), ("UZS", "uzs")))
+    isNegotiable = serializers.BooleanField()
     price = serializers.DecimalField(max_digits=12, decimal_places=2)
     description = serializers.CharField()
-    location = serializers.IntegerField()
-    images = ClassifiedImageSerializer(many=True, required=False)
+
+    location = serializers.PrimaryKeyRelatedField(
+        queryset=Locations.objects.all()
+    )
 
     def create(self, validated_data):
         dynamic_fields = validated_data.pop('dynamicFields', [])
-        currency_type = validated_data.pop('currencyType')
-        is_negotiable = validated_data.pop('isNegotiable', False)
-        price = validated_data.pop('price')
-        description = validated_data.pop('description')
-        location_id = validated_data.pop('location')
-        title = validated_data.pop('title')
-        category = validated_data.pop('category')
-        user = validated_data.pop('owner')
 
         classified = Classified.objects.create(
-            category_id=category,
-            title=title,
-            owner=user
+            category=validated_data['category'],
+            title=validated_data['title'],
+            owner=validated_data['owner'],
         )
 
-        classified_detail = ClassifiedDetail.objects.create(
+        detail = ClassifiedDetail.objects.create(
             classified=classified,
-            currency_type=currency_type,
-            is_negotiable=is_negotiable,
-            price=price,
-            description=description,
-            location_id=location_id
+            currency_type=validated_data['currencyType'],
+            is_negotiable=validated_data['isNegotiable'],
+            price=validated_data['price'],
+            description=validated_data['description'],
+            location=validated_data['location']
         )
 
         for dynamic_field in dynamic_fields:
             DynamicField.objects.create(
-                classified_detail=classified_detail, **dynamic_field)
+                classified_detail=detail,
+                **dynamic_field
+            )
 
         classified.status = PENDING
         classified.save()
 
         return classified
+
+    def update(self, instance, validated_data):
+        dynamic_fields = validated_data.pop('dynamicFields', [])
+
+        detail = instance.detail
+
+        detail.currency_type = validated_data.get(
+            'currencyType', detail.currency_type)
+        detail.price = validated_data.get('price', detail.price)
+        detail.description = validated_data.get(
+            'description', detail.description)
+
+        detail.save()
+
+        for dynamic_field in dynamic_fields:
+            field_id = dynamic_field.get("id")
+            if field_id:
+                DynamicField.objects.filter(
+                    id=field_id).update(**dynamic_field)
+            else:
+                DynamicField.objects.create(
+                    classified_detail=detail, **dynamic_field)
+
+        instance.title = validated_data.get('title', instance.title)
+        instance.category = validated_data.get('category', instance.category)
+        instance.save()
+
+        return instance
+
+    def to_representation(self, instance):
+        data = {
+            'id': instance.id,
+            'title': instance.title,
+            'category': instance.category_id
+        }
+
+        if self.context.get('include_dynamic_fields'):
+            data['dynamicFields'] = DynamicFieldSerializer(
+                instance.detail.dynamicfield_set.all(), many=True).data
+
+        return data

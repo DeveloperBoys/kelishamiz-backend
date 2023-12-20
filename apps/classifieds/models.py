@@ -97,14 +97,13 @@ class ClassifiedDetail(Base):
     classified = models.OneToOneField(
         Classified, related_name='detail', on_delete=models.CASCADE)
     currency_type = models.CharField(
-        max_length=3, choices=(("usd", "USD"), ("uzs", "UZS")))
+        max_length=3, choices=(("USD", "usd"), ("UZS", "uzs")))
     price = models.DecimalField(max_digits=12, decimal_places=2)
     is_negotiable = models.BooleanField(default=False)
     description = models.TextField()
     location = models.ForeignKey(Locations, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = []
         verbose_name = "Classified Detail"
         verbose_name_plural = "Classified Details"
 

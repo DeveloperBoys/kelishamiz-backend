@@ -9,7 +9,10 @@ from .models import (
     ClassifiedImage,
     ClassifiedDetail,
 )
+from apps.users.models import User
+from .tasks import upload_classified_images
 from apps.site_settings.models import Locations
+from apps.users.serializers import UserDataSerializer
 
 
 class ChildCategorySerializer(serializers.ModelSerializer):
@@ -50,7 +53,8 @@ class CategorySerializer(serializers.ModelSerializer):
 class DynamicFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = DynamicField
-        fields = ('key', 'value')
+        fields = ('id', 'key', 'value')
+        read_only_fields = ('id',)
 
 
 class ClassifiedImageSerializer(serializers.ModelSerializer):
@@ -176,14 +180,20 @@ class ClassifiedListSerializer(serializers.ModelSerializer):
 
 class ClassifiedSerializer(serializers.ModelSerializer):
     detail = ClassifiedDetailSerializer()
+    ownerData = serializers.SerializerMethodField()
     isLiked = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     category = serializers.SerializerMethodField()
 
     class Meta:
         model = Classified
-        fields = ('id', 'title', 'category', 'detail', 'isLiked', 'createdAt')
+        fields = ('id', 'title', 'category', 'detail',
+                  'ownerData', 'isLiked', 'createdAt')
         read_only_fields = ('id',)
+
+    def get_ownerData(self, obj):
+        owner = User.objects.get(pk=obj.owner.pk)
+        return UserDataSerializer(owner).data
 
     def get_category(self, obj):
         request = self.context.get('request')
@@ -197,21 +207,6 @@ class ClassifiedSerializer(serializers.ModelSerializer):
             return obj.classifiedlike_set.filter(
                 user_id=user.id, is_active=True).exists()
         return False
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.category.pk = validated_data.get(
-            'category', instance.category.pk)
-        instance.save()
-
-        detail_data = validated_data.get('detail', {})
-        detail_serializer = ClassifiedDetailSerializer(
-            instance=instance.classifieddetail, data=detail_data, partial=True
-        )
-        if detail_serializer.is_valid():
-            detail_serializer.save()
-
-        return instance
 
 
 class DeleteClassifiedSerializer(serializers.ModelSerializer):
@@ -230,27 +225,30 @@ class ClassifiedCreateSerializer(serializers.Serializer):
         queryset=Category.objects.all()
     )
     title = serializers.CharField(max_length=150)
-
     dynamicFields = DynamicFieldSerializer(many=True, required=False)
     images = ClassifiedImageSerializer(many=True, required=False)
-
     currencyType = serializers.ChoiceField(
         choices=(("USD", "usd"), ("UZS", "uzs")))
     isNegotiable = serializers.BooleanField()
     price = serializers.DecimalField(max_digits=12, decimal_places=2)
     description = serializers.CharField()
-
     location = serializers.PrimaryKeyRelatedField(
         queryset=Locations.objects.all()
     )
 
+    class Meta:
+        exclude = ['images']
+
     def create(self, validated_data):
         dynamic_fields = validated_data.pop('dynamicFields', [])
+
+        request = self.context['request']
+        owner = request.user
 
         classified = Classified.objects.create(
             category=validated_data['category'],
             title=validated_data['title'],
-            owner=validated_data['owner'],
+            owner=owner,
         )
 
         detail = ClassifiedDetail.objects.create(
@@ -268,8 +266,8 @@ class ClassifiedCreateSerializer(serializers.Serializer):
                 **dynamic_field
             )
 
-        classified.status = PENDING
-        classified.save()
+        images = request.FILES.getlist('images')
+        upload_classified_images.delay(classified.id, images)
 
         return classified
 
@@ -280,9 +278,12 @@ class ClassifiedCreateSerializer(serializers.Serializer):
 
         detail.currency_type = validated_data.get(
             'currencyType', detail.currency_type)
+        detail.is_negotiable = validated_data.get(
+            'isNegotiable', detail.is_negotiable)
         detail.price = validated_data.get('price', detail.price)
         detail.description = validated_data.get(
             'description', detail.description)
+        detail.location = validated_data.get('location', detail.location)
 
         detail.save()
 
@@ -300,12 +301,3 @@ class ClassifiedCreateSerializer(serializers.Serializer):
         instance.save()
 
         return instance
-
-    def to_representation(self, instance):
-        data = {
-            'id': instance.id,
-            'title': instance.title,
-            'category': instance.category_id
-        }
-
-        return data

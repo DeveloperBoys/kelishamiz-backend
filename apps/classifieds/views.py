@@ -123,11 +123,11 @@ class CreateClassifiedView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         classified = serializer.save(owner=request.user)
 
-        images = [SimpleUploadedFile(f.name, f.read())
-                  for f in request.FILES.getlist('images')]
+        uploaded_files = [SimpleUploadedFile(f.name, f.read())
+                          for f in request.FILES.getlist('images')]
         upload_classified_images.delay(
             classified_id=classified.pk,
-            uploaded_files=images
+            uploaded_files=uploaded_files
         )
 
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)

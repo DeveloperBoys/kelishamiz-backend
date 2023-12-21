@@ -308,8 +308,4 @@ class ClassifiedCreateSerializer(serializers.Serializer):
             'category': instance.category_id
         }
 
-        if self.context.get('include_dynamic_fields'):
-            data['dynamicFields'] = DynamicFieldSerializer(
-                instance.detail.dynamicfield_set.all(), many=True).data
-
         return data

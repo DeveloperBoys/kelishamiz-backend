@@ -193,7 +193,7 @@ class ClassifiedSerializer(serializers.ModelSerializer):
 
     def get_ownerData(self, obj):
         owner = User.objects.get(pk=obj.owner.pk)
-        return UserDataSerializer(owner).data
+        return ClassifiedOwnerSerializer(owner).data
 
     def get_category(self, obj):
         request = self.context.get('request')
@@ -308,12 +308,10 @@ class ClassifiedOwnerSerializer(serializers.ModelSerializer):
     lastName = serializers.CharField(source='last_name', required=True)
     profileImage = serializers.FileField(
         source='profile_image', required=False)
-    fatherName = serializers.CharField(source='first_name', required=False)
     phoneNumber = serializers.CharField(source='phone_number', required=True)
-    birthDate = serializers.CharField(source='birth_date', required=False)
 
     class Meta:
         model = User
-        fields = ('id', 'firstName', 'lastName', 'fatherName',
-                  'email', 'phoneNumber', 'birthDate', 'profileImage')
-        read_only_fields = ['id']
+        fields = ('id', 'firstName', 'lastName',
+                  'email', 'phoneNumber', 'profileImage')
+        read_only_fields = ('id')

@@ -301,3 +301,19 @@ class ClassifiedCreateSerializer(serializers.Serializer):
         instance.save()
 
         return instance
+
+
+class ClassifiedOwnerSerializer(serializers.ModelSerializer):
+    firstName = serializers.CharField(source='first_name', required=True)
+    lastName = serializers.CharField(source='last_name', required=True)
+    profileImage = serializers.FileField(
+        source='profile_image', required=False)
+    fatherName = serializers.CharField(source='first_name', required=False)
+    phoneNumber = serializers.CharField(source='phone_number', required=True)
+    birthDate = serializers.CharField(source='birth_date', required=False)
+
+    class Meta:
+        model = User
+        fields = ('id', 'firstName', 'lastName', 'fatherName',
+                  'email', 'phoneNumber', 'birthDate', 'profileImage')
+        read_only_fields = ['id']

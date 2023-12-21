@@ -119,7 +119,7 @@ If you prefer to use Docker for running the project, follow these steps:
 
 # Contributing
 
-We welcome contributions to enhance the functionality and features of the backend. Please refer to the [CONTRIBUTING.md](Readme/CONTRIBUTING.md) file for guidelines.
+We welcome contributions to enhance the functionality and features of the backend. Please refer to the [CONTRIBUTING.md](readme/CONTRIBUTING.md) file for guidelines.
 
 # License
 

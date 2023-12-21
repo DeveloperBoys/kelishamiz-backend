@@ -23,6 +23,7 @@ from apps.permissions.permissions import (
 from .serializers import (
     CategorySerializer,
     ClassifiedListSerializer,
+    ClassifiedOwnerSerializer,
     ClassifiedSerializer,
     DeleteClassifiedSerializer,
     ClassifiedCreateSerializer
@@ -168,3 +169,22 @@ class EditClassifiedView(generics.RetrieveUpdateAPIView):
             return Classified.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
+
+
+@method_decorator(cache_page(60*15), name='dispatch')
+class ClassifiedOwnerView(generics.ListAPIView):
+    serializer_class = ClassifiedListSerializer
+
+    def get_queryset(self):
+        return Classified.objects.filter(
+            pk=self.kwargs['pk'], status=APPROVED).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        instance = self.get_queryset()
+        user = instance.first().owner
+
+        data = {
+            "owner": ClassifiedOwnerSerializer(user).data,
+            "classifieds": self.get_serializer(instance, many=True).data
+        }
+        return Response(data=data, status=status.HTTP_200_OK)

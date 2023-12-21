@@ -8,12 +8,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
-from apps.payments.models import UserBalance
-
 from .models import User
 from .utils import phone_parser
 from config.utility import check_phone
 from .tasks import send_phone_notification
+from apps.payments.models import UserBalance
 
 
 class VerifyRequestSerializer(serializers.Serializer):

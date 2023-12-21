@@ -14,9 +14,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .models import User
 from apps.classifieds.models import Classified
 from apps.user_searches.models import SearchQuery
+from apps.admin_api.filters import ClassifiedFilter
 from apps.user_searches.serializers import SearchQuerySerializer
 from apps.classifieds.serializers import ClassifiedListSerializer, ClassifiedSerializer
 from .serializers import (ChangeUserInformationSerializer, UserLoginSerializer, VerifyRequestSerializer,
@@ -111,6 +111,7 @@ class UserDataView(RetrieveAPIView):
 class UserClassifiedListView(ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ClassifiedListSerializer
+    filterset_class = ClassifiedFilter
 
     def get_queryset(self):
         return Classified.objects.filter(owner=self.request.user)

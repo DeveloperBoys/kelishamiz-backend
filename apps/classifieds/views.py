@@ -123,14 +123,19 @@ class CreateClassifiedView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         classified = serializer.save(owner=request.user)
 
-        images = [SimpleUploadedFile(f.name, f.read())
-                  for f in request.FILES.getlist('images')]
+        uploaded_files = [SimpleUploadedFile(f.name, f.read())
+                          for f in request.FILES.getlist('images')]
         upload_classified_images.delay(
             classified_id=classified.pk,
-            uploaded_files=images
+            uploaded_files=uploaded_files
         )
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({'include_dynamic_fields': True})
+        return context
 
 
 @method_decorator(cache_page(60*15), name='dispatch')
@@ -139,9 +144,12 @@ class ClassifiedLikeView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return ClassifiedLike.objects.filter(
-            classified_id=self.kwargs['pk']
-        )
+        try:
+            return ClassifiedLike.objects.filter(
+                classified_id=self.kwargs['pk']
+            )
+        except:
+            return None
 
     def post(self, request, *args, **kwargs):
         obj, created = ClassifiedLike.objects.get_or_create(
@@ -173,3 +181,8 @@ class EditClassifiedView(generics.RetrieveUpdateAPIView):
             return Classified.objects.filter(classified=self.kwargs['pk'])
         except:
             return None
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({'include_dynamic_fields': True})
+        return context

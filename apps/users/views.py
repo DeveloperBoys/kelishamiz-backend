@@ -6,21 +6,19 @@ from django.views.decorators.cache import cache_page
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import permissions, status
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework.generics import GenericAPIView, UpdateAPIView, RetrieveAPIView, ListAPIView
+from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.generics import GenericAPIView, UpdateAPIView, RetrieveAPIView, ListAPIView, RetrieveDestroyAPIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenRefreshView
-from apps.classifieds.models import Classified
-from apps.classifieds.serializers import ClassifiedListSerializer, ClassifiedSerializer
-
-from apps.user_searches.models import SearchQuery
-from apps.user_searches.serializers import SearchQuerySerializer
-
 
 from .models import User
+from apps.classifieds.models import Classified
+from apps.user_searches.models import SearchQuery
+from apps.user_searches.serializers import SearchQuerySerializer
+from apps.classifieds.serializers import ClassifiedListSerializer, ClassifiedSerializer
 from .serializers import (ChangeUserInformationSerializer, UserLoginSerializer, VerifyRequestSerializer,
                           LogoutSerializer, UserDataSerializer, CustomTokenRefreshSerializer)
 
@@ -100,41 +98,30 @@ class UserDataView(RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserDataSerializer
 
+    def get_object(self):
+        return self.request.user
+
+    @action(detail=True, methods=['GET', 'DELETE'], url_path="searches/", url_name="user-searches")
+    def user_searches(self, request, *args, **kwargs):
+        searches = SearchQuery.objects.filter(user=self.get_object())
+        serializer = SearchQuerySerializer(searches, many=True)
+        return Response(serializer.data)
+
+
+class UserClassifiedListView(ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ClassifiedListSerializer
+
     def get_queryset(self):
-        if self.request is not None:
-            return User.objects.filter(self.request.user)
-        return User.objects.none()
+        return Classified.objects.filter(owner=self.request.user)
 
-    def get(self, request):
-        serializer = self.get_serializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['GET'], url_path="searches/", url_name="user-searches")
-    def user_searches(self, request, pk):
-        obj = SearchQuery.objects.filter(user_id=pk)
+class UserClassifiedDetailView(RetrieveDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ClassifiedSerializer
 
-        if obj.exists():
-            return Response(SearchQuerySerializer(obj, many=True).data)
-
-        return Response([])
-
-    @action(detail=True, url_path="classifieds", url_name="user-classifieds")
-    def user_classifieds(self, request, pk):
-        obj = Classified.objects.filter(owner_id=pk)
-
-        if obj.exists():
-            return Response(ClassifiedListSerializer(obj, many=True).data)
-
-        return Response([])
-
-    @action(detail=True, url_path="classifieds/<int:pk>")
-    def user_classifieds(self, request, pk):
-        obj = Classified.objects.filter(pk=pk).last()
-
-        if obj:
-            return Response(ClassifiedSerializer(obj, many=True).data)
-
-        return Response([])
+    def get_queryset(self):
+        return Classified.objects.filter(owner=self.request.user, pk=self.kwargs['pk'])
 
 
 class UserSearchesView(ListAPIView):
@@ -144,22 +131,8 @@ class UserSearchesView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-
         if user:
             return SearchQuery.objects.filter(user=user)
-        return []
-
-
-class UserClassifiedsView(ListAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ClassifiedListSerializer
-    http_method_names = ['get']
-
-    def get_queryset(self):
-        user = self.request.user
-
-        if user:
-            return Classified.objects.filter(owner=user)
         return []
 
 

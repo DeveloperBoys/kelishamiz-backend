@@ -33,4 +33,4 @@ class ClassifiedLike(models.Model):
         ]
 
     def __str__(self):
-        return f"User: {self.user.full_name} - Classified: {self.classified.title}"
+        return f"User UUID: {self.user.guid} - Classified: {self.classified.title}"

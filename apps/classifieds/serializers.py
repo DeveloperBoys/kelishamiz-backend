@@ -97,13 +97,14 @@ class ClassifiedImageSerializer(serializers.ModelSerializer):
 class ClassifiedDetailSerializer(serializers.ModelSerializer):
     currencyType = serializers.CharField(source='currency_type')
     dynamicFields = serializers.SerializerMethodField(source='dynamic_fields')
+    isNegotiable = serializers.BooleanField(source="is_negotiable")
     images = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
 
     class Meta:
         model = ClassifiedDetail
         fields = ('currencyType', 'price', 'description',
-                  'dynamicFields', 'location', 'images')
+                  'dynamicFields', 'isNegotiable', 'location', 'images')
 
     def get_dynamicFields(self, obj):
         dynamic_fields = DynamicField.objects.filter(classified_detail=obj)

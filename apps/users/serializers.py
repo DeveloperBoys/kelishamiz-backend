@@ -82,7 +82,7 @@ class UserDataSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(source='first_name', required=True)
     lastName = serializers.CharField(source='last_name', required=True)
     profileImage = serializers.FileField(
-        source='profile_image', required=False)
+        source='profile_image_url', required=False)
     balance = serializers.SerializerMethodField(read_only=True)
     fatherName = serializers.CharField(source='first_name', required=False)
     phoneNumber = serializers.CharField(source='phone_number', required=True)

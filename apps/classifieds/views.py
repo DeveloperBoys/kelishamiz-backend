@@ -176,15 +176,16 @@ class ClassifiedOwnerView(generics.ListAPIView):
     serializer_class = ClassifiedListSerializer
 
     def get_queryset(self):
-        return Classified.objects.filter(
-            pk=self.kwargs['pk'], status=APPROVED).order_by('-created_at')
+        return Classified.objects.get(pk=self.kwargs['pk'], status=APPROVED)
 
     def list(self, request, *args, **kwargs):
         instance = self.get_queryset()
-        user = instance.first().owner
+        user = instance.owner
+        classifieds = Classified.objects.filter(
+            owner=user, status=APPROVED).order_by('-created_at')
 
         data = {
             "owner": ClassifiedOwnerSerializer(user).data,
-            "classifieds": self.get_serializer(instance, many=True).data
+            "classifieds": self.get_serializer(classifieds, many=True).data
         }
         return Response(data=data, status=status.HTTP_200_OK)

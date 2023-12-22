@@ -307,11 +307,11 @@ class ClassifiedOwnerSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(source='first_name', required=True)
     lastName = serializers.CharField(source='last_name', required=True)
     profileImage = serializers.FileField(
-        source='profile_image', required=False)
+        source='profile_image_url', required=False)
     phoneNumber = serializers.CharField(source='phone_number', required=True)
 
     class Meta:
         model = User
         fields = ('id', 'firstName', 'lastName',
                   'email', 'phoneNumber', 'profileImage')
-        read_only_fields = ('id')
+        read_only_fields = ('id',)
